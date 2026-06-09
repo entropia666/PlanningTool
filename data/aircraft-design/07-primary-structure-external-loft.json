@@ -1,0 +1,11 @@
+{
+  "id": "primary-structure-external-loft",
+  "type": "deliverable",
+  "name": "Primary structure external loft",
+  "description": "Joint definition phase deliverable — external loft (aero shape) for primary structure: fuselage, wing, vertical tail, horizontal tail, and pylon.",
+  "date": "2028-10-30",
+  "predecessors": ["joint-definition-phase"],
+  "status": "planned",
+  "tags": ["aircraft-design", "deliverable", "joint-definition", "primary-structure", "loft", "aero"],
+  "components": ["fuselage", "wing", "vertical-tail", "horizontal-tail", "pylon"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "mvp-release",
+  "type": "deliverable",
+  "name": "MVP release",
+  "description": "Deployable MVP to staging environment.",
+  "date": "2026-08-22",
+  "predecessors": ["frontend", "backend"],
+  "status": "planned",
+  "assignee": "Dev Team",
+  "color": "#059669"
+}

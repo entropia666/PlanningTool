@@ -1,0 +1,11 @@
+{
+  "id": "req-spec",
+  "type": "deliverable",
+  "name": "Requirements specification",
+  "description": "Signed-off requirements document (PDF + source).",
+  "date": "2026-06-14",
+  "predecessors": ["requirements"],
+  "status": "planned",
+  "assignee": "Alice",
+  "tags": ["documentation"]
+}

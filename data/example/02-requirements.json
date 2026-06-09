@@ -1,0 +1,13 @@
+{
+  "id": "requirements",
+  "type": "task",
+  "name": "Gather requirements",
+  "description": "Interview stakeholders and document functional and non-functional requirements.",
+  "start": "2026-06-03",
+  "end": "2026-06-14",
+  "predecessors": ["kickoff"],
+  "status": "in-progress",
+  "assignee": "Alice",
+  "priority": "high",
+  "tags": ["analysis", "phase-1"]
+}

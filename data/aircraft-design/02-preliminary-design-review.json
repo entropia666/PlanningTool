@@ -1,0 +1,10 @@
+{
+  "id": "preliminary-design-review",
+  "type": "milestone",
+  "name": "Preliminary Design Review",
+  "description": "Overall aircraft design — preliminary design review gate. Scheduled 15 months after Concept Review.",
+  "date": "2028-07-30",
+  "predecessors": ["concept-review"],
+  "status": "planned",
+  "tags": ["aircraft-design", "milestone", "preliminary-design"]
+}

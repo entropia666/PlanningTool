@@ -1,0 +1,10 @@
+{
+  "id": "design-review",
+  "type": "milestone",
+  "name": "Design review",
+  "description": "Architecture and UX review with tech lead.",
+  "date": "2026-07-04",
+  "predecessors": ["design"],
+  "status": "planned",
+  "assignee": "Tech Lead"
+}

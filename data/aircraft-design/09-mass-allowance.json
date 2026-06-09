@@ -1,0 +1,25 @@
+{
+  "id": "mass-allowance",
+  "type": "deliverable",
+  "name": "Mass allowance for each component",
+  "description": "Joint definition phase deliverable — mass allowance budget allocated to each component, covering primary structure, components, systems, propulsion, landing gear, and other major items.",
+  "date": "2028-10-30",
+  "predecessors": ["joint-definition-phase"],
+  "status": "planned",
+  "tags": ["aircraft-design", "deliverable", "joint-definition", "mass", "weight"],
+  "components": [
+    "fuselage",
+    "wing",
+    "vertical-tail",
+    "horizontal-tail",
+    "pylon",
+    "control-surfaces",
+    "flaps",
+    "fairings",
+    "engine",
+    "landing-gear",
+    "water-skid",
+    "actuators",
+    "systems"
+  ]
+}

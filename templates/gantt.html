@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #d8dee6;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --task: #3b82f6;
+      --task-border: #2563eb;
+      --milestone: #f59e0b;
+      --deliverable: #10b981;
+      --grid: #e5e7eb;
+      --arrow: #64748b;
+      --label-width: 220px;
+      --row-height: 48px;
+      --header-height: 56px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 16px 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    header .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-bar {
+      width: 24px;
+      height: 10px;
+      border-radius: 4px;
+      background: var(--task);
+    }
+
+    .legend-diamond {
+      width: 10px;
+      height: 10px;
+      background: var(--milestone);
+      transform: rotate(45deg);
+    }
+
+    .legend-circle {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--deliverable);
+    }
+
+    .chart-shell {
+      margin: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 96px);
+    }
+
+    .timeline-header {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: #fafbfc;
+      flex-shrink: 0;
+    }
+
+    .label-corner {
+      width: var(--label-width);
+      min-width: var(--label-width);
+      border-right: 1px solid var(--border);
+      height: var(--header-height);
+    }
+
+    .timeline-scroll-x {
+      overflow-x: auto;
+      flex: 1;
+    }
+
+    .timeline-axis {
+      height: var(--header-height);
+      position: relative;
+    }
+
+    .chart-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .labels-column {
+      width: var(--label-width);
+      min-width: var(--label-width);
+      border-right: 1px solid var(--border);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .label-row {
+      height: var(--row-height);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--grid);
+      font-size: 0.875rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .label-row .type-badge {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 6px;
+      border-radius: 999px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .type-task { background: #dbeafe; color: #1d4ed8; }
+    .type-milestone { background: #fef3c7; color: #b45309; }
+    .type-deliverable { background: #d1fae5; color: #047857; }
+
+    .chart-scroll {
+      overflow: auto;
+      flex: 1;
+    }
+
+    .chart-canvas {
+      position: relative;
+    }
+
+    .grid-layer,
+    .links-layer,
+    .items-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .grid-line {
+      stroke: var(--grid);
+      stroke-width: 1;
+    }
+
+    .axis-label {
+      position: absolute;
+      top: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .task-bar {
+      fill: var(--task);
+      stroke: var(--task-border);
+      stroke-width: 1;
+      rx: 4;
+      cursor: pointer;
+    }
+
+    .task-bar:hover { filter: brightness(1.08); }
+
+    .milestone-shape {
+      fill: var(--milestone);
+      stroke: #d97706;
+      stroke-width: 1.5;
+      cursor: pointer;
+    }
+
+    .deliverable-shape {
+      fill: var(--deliverable);
+      stroke: #059669;
+      stroke-width: 1.5;
+      cursor: pointer;
+    }
+
+    .milestone-shape:hover,
+    .deliverable-shape:hover {
+      filter: brightness(1.08);
+    }
+
+    .dependency-line {
+      fill: none;
+      stroke: var(--arrow);
+      stroke-width: 1.5;
+      marker-end: url(#arrowhead);
+    }
+
+    #tooltip {
+      position: fixed;
+      z-index: 1000;
+      max-width: 360px;
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    #tooltip.visible { opacity: 1; }
+
+    #tooltip h3 {
+      margin: 0 0 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    #tooltip dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 12px;
+    }
+
+    #tooltip dt {
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    #tooltip dd {
+      margin: 0;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{TITLE}}</h1>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-bar"></span> Task</span>
+      <span class="legend-item"><span class="legend-diamond"></span> Milestone</span>
+      <span class="legend-item"><span class="legend-circle"></span> Deliverable</span>
+    </div>
+  </header>
+
+  <div class="chart-shell">
+    <div class="timeline-header">
+      <div class="label-corner"></div>
+      <div class="timeline-scroll-x" id="timeline-scroll-x">
+        <div class="timeline-axis" id="timeline-axis"></div>
+      </div>
+    </div>
+    <div class="chart-body">
+      <div class="labels-column" id="labels-column"></div>
+      <div class="chart-scroll" id="chart-scroll">
+        <div class="chart-canvas" id="chart-canvas">
+          <svg class="grid-layer" id="grid-layer"></svg>
+          <svg class="links-layer" id="links-layer"></svg>
+          <svg class="items-layer" id="items-layer"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tooltip" role="tooltip"></div>
+
+  <script id="plan-data" type="application/json">
+{{ITEMS_JSON}}
+  </script>
+
+  <script>
+    const ITEMS = JSON.parse(document.getElementById("plan-data").textContent);
+    const ROW_HEIGHT = 48;
+    const HEADER_HEIGHT = 56;
+    const LABEL_WIDTH = 220;
+    const DAY_WIDTH = 18;
+    const PADDING_DAYS = 3;
+
+    const tooltip = document.getElementById("tooltip");
+    const chartScroll = document.getElementById("chart-scroll");
+    const timelineScrollX = document.getElementById("timeline-scroll-x");
+    const labelsColumn = document.getElementById("labels-column");
+    const chartCanvas = document.getElementById("chart-canvas");
+    const gridLayer = document.getElementById("grid-layer");
+    const linksLayer = document.getElementById("links-layer");
+    const itemsLayer = document.getElementById("items-layer");
+    const timelineAxis = document.getElementById("timeline-axis");
+
+    chartScroll.addEventListener("scroll", () => {
+      timelineScrollX.scrollLeft = chartScroll.scrollLeft;
+      labelsColumn.scrollTop = chartScroll.scrollTop;
+    });
+    timelineScrollX.addEventListener("scroll", () => {
+      chartScroll.scrollLeft = timelineScrollX.scrollLeft;
+    });
+
+    function parseDate(str) {
+      const [y, m, d] = str.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function daysBetween(a, b) {
+      return Math.round((b - a) / 86400000);
+    }
+
+    function itemStart(item) {
+      if (item.type === "task") return parseDate(item.start);
+      return parseDate(item.date);
+    }
+
+    function itemEnd(item) {
+      if (item.type === "task") return parseDate(item.end);
+      return parseDate(item.date);
+    }
+
+    function formatDate(d) {
+      return d.toISOString().slice(0, 10);
+    }
+
+    function computeBounds(items) {
+      let min = null;
+      let max = null;
+      for (const item of items) {
+        const start = itemStart(item);
+        const end = itemEnd(item);
+        if (!min || start < min) min = start;
+        if (!max || end > max) max = end;
+      }
+      min.setDate(min.getDate() - PADDING_DAYS);
+      max.setDate(max.getDate() + PADDING_DAYS);
+      return { min, max };
+    }
+
+    function xForDate(date, minDate) {
+      return daysBetween(minDate, date) * DAY_WIDTH;
+    }
+
+    function formatFieldName(key) {
+      return key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function formatFieldValue(value) {
+      if (Array.isArray(value)) return value.join(", ");
+      if (typeof value === "object" && value !== null) return JSON.stringify(value);
+      return String(value);
+    }
+
+    function showTooltip(item, event) {
+      const rows = Object.entries(item)
+        .filter(([key]) => !key.startsWith("_"))
+        .map(([key, value]) =>
+          `<dt>${formatFieldName(key)}</dt><dd>${formatFieldValue(value)}</dd>`
+        )
+        .join("");
+      tooltip.innerHTML = `<h3>${item.name}</h3><dl>${rows}</dl>`;
+      tooltip.classList.add("visible");
+      moveTooltip(event);
+    }
+
+    function moveTooltip(event) {
+      const pad = 14;
+      let x = event.clientX + pad;
+      let y = event.clientY + pad;
+      const rect = tooltip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth - 8) x = event.clientX - rect.width - pad;
+      if (y + rect.height > window.innerHeight - 8) y = event.clientY - rect.height - pad;
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove("visible");
+    }
+
+    function bindTooltip(el, item) {
+      el.addEventListener("mouseenter", e => showTooltip(item, e));
+      el.addEventListener("mousemove", moveTooltip);
+      el.addEventListener("mouseleave", hideTooltip);
+    }
+
+    function taskItems(items) {
+      return items.filter(item => item.type === "task");
+    }
+
+    function resolveMarkerRow(item, byId) {
+      if (item.anchor && byId[item.anchor]?.type === "task") {
+        return byId[item.anchor].row;
+      }
+      for (const predId of item.predecessors || []) {
+        const pred = byId[predId];
+        if (!pred) continue;
+        if (pred.type === "task") return pred.row;
+        const row = resolveMarkerRow(pred, byId);
+        if (row !== null) return row;
+      }
+      for (const other of Object.values(byId)) {
+        if (other.type !== "task") continue;
+        if ((other.predecessors || []).includes(item.id)) return other.row;
+      }
+      return taskItems(ITEMS)[0]?.row ?? 0;
+    }
+
+    function itemRow(item, byId) {
+      return item.type === "task" ? item.row : resolveMarkerRow(item, byId);
+    }
+
+    function markerOffsetY(item) {
+      if (item.type === "milestone") return -14;
+      if (item.type === "deliverable") return 14;
+      return 0;
+    }
+
+    function tasksOnRow(row, tasks) {
+      return tasks.filter(task => task.row === row);
+    }
+
+    function taskBarOffsetY(task, tasks) {
+      const onRow = tasksOnRow(task.row, tasks).sort((a, b) => a.id.localeCompare(b.id));
+      if (onRow.length <= 1) return 0;
+      const index = onRow.findIndex(t => t.id === task.id);
+      const step = 12;
+      return (index - (onRow.length - 1) / 2) * step;
+    }
+
+    function uniqueTaskRows(tasks) {
+      return [...new Set(tasks.map(task => task.row))].sort((a, b) => a - b);
+    }
+
+    function rowLabel(row, tasks) {
+      const onRow = tasksOnRow(row, tasks);
+      const custom = onRow.find(task => task.row_label)?.row_label;
+      if (custom) return custom;
+      return onRow.map(task => task.name).join(" · ");
+    }
+
+    function renderLabels(items) {
+      const tasks = taskItems(items);
+      labelsColumn.innerHTML = uniqueTaskRows(tasks).map(row =>
+        `<div class="label-row" data-row="${row}">${rowLabel(row, tasks)}</div>`
+      ).join("");
+    }
+
+    function renderAxis(minDate, maxDate, width) {
+      timelineAxis.style.width = `${width}px`;
+      const totalDays = daysBetween(minDate, maxDate);
+      let html = "";
+      for (let d = 0; d <= totalDays; d += 7) {
+        const date = new Date(minDate);
+        date.setDate(date.getDate() + d);
+        const x = d * DAY_WIDTH;
+        html += `<span class="axis-label" style="left:${x}px">${formatDate(date)}</span>`;
+      }
+      timelineAxis.innerHTML = html;
+    }
+
+    function renderGrid(minDate, maxDate, rowCount, width) {
+      const height = rowCount * ROW_HEIGHT;
+      gridLayer.setAttribute("width", width);
+      gridLayer.setAttribute("height", height);
+      chartCanvas.style.width = `${width}px`;
+      chartCanvas.style.height = `${height}px`;
+
+      let svg = "";
+      const totalDays = daysBetween(minDate, maxDate);
+      for (let d = 0; d <= totalDays; d++) {
+        const x = d * DAY_WIDTH + 0.5;
+        svg += `<line class="grid-line" x1="${x}" y1="0" x2="${x}" y2="${height}"/>`;
+      }
+      for (let r = 0; r <= rowCount; r++) {
+        const y = r * ROW_HEIGHT + 0.5;
+        svg += `<line class="grid-line" x1="0" y1="${y}" x2="${width}" y2="${y}"/>`;
+      }
+      gridLayer.innerHTML = svg;
+    }
+
+    function centerY(row) {
+      return row * ROW_HEIGHT + ROW_HEIGHT / 2;
+    }
+
+    function renderItems(items, minDate, byId) {
+      itemsLayer.innerHTML = "";
+      linksLayer.innerHTML = "";
+
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      marker.setAttribute("id", "arrowhead");
+      marker.setAttribute("markerWidth", "8");
+      marker.setAttribute("markerHeight", "8");
+      marker.setAttribute("refX", "7");
+      marker.setAttribute("refY", "4");
+      marker.setAttribute("orient", "auto");
+      const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      arrowPath.setAttribute("d", "M0,0 L8,4 L0,8 Z");
+      arrowPath.setAttribute("fill", "#64748b");
+      marker.appendChild(arrowPath);
+      defs.appendChild(marker);
+      linksLayer.appendChild(defs);
+
+      const anchors = {};
+      const tasks = taskItems(items);
+
+      for (const item of items) {
+        const row = itemRow(item, byId);
+        const cy = centerY(row) + markerOffsetY(item);
+        const color = item.color || null;
+
+        if (item.type === "task") {
+          const taskCy = centerY(row) + taskBarOffsetY(item, tasks);
+          const x1 = xForDate(parseDate(item.start), minDate);
+          const x2 = xForDate(parseDate(item.end), minDate);
+          const barHeight = 22;
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute("class", "task-bar");
+          rect.setAttribute("x", x1);
+          rect.setAttribute("y", taskCy - barHeight / 2);
+          rect.setAttribute("width", Math.max(x2 - x1, 6));
+          rect.setAttribute("height", barHeight);
+          if (color) {
+            rect.setAttribute("fill", color);
+            rect.setAttribute("stroke", color);
+          }
+          bindTooltip(rect, item);
+          itemsLayer.appendChild(rect);
+          anchors[item.id] = { start: { x: x1, y: taskCy }, end: { x: x2, y: taskCy } };
+        } else if (item.type === "milestone") {
+          const x = xForDate(parseDate(item.date), minDate);
+          const size = 12;
+          const diamond = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+          diamond.setAttribute("class", "milestone-shape");
+          diamond.setAttribute(
+            "points",
+            `${x},${cy - size} ${x + size},${cy} ${x},${cy + size} ${x - size},${cy}`
+          );
+          if (color) {
+            diamond.setAttribute("fill", color);
+            diamond.setAttribute("stroke", color);
+          }
+          bindTooltip(diamond, item);
+          itemsLayer.appendChild(diamond);
+          anchors[item.id] = { start: { x, y: cy }, end: { x, y: cy } };
+        } else {
+          const x = xForDate(parseDate(item.date), minDate);
+          const r = 9;
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("class", "deliverable-shape");
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", cy);
+          circle.setAttribute("r", r);
+          if (color) {
+            circle.setAttribute("fill", color);
+            circle.setAttribute("stroke", color);
+          }
+          bindTooltip(circle, item);
+          itemsLayer.appendChild(circle);
+          anchors[item.id] = { start: { x, y: cy }, end: { x, y: cy } };
+        }
+      }
+
+      for (const item of items) {
+        const target = anchors[item.id];
+        if (!target) continue;
+        for (const predId of item.predecessors || []) {
+          const source = anchors[predId];
+          if (!source) continue;
+
+          const x1 = source.end.x;
+          const y1 = source.end.y;
+          const x2 = target.start.x;
+          const y2 = target.start.y;
+          const midX = x1 + Math.max(24, (x2 - x1) * 0.4);
+
+          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+          path.setAttribute("class", "dependency-line");
+          path.setAttribute(
+            "d",
+            `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`
+          );
+          linksLayer.appendChild(path);
+        }
+      }
+
+      const width = chartCanvas.style.width.replace("px", "");
+      const height = chartCanvas.style.height.replace("px", "");
+      itemsLayer.setAttribute("width", width);
+      itemsLayer.setAttribute("height", height);
+      linksLayer.setAttribute("width", width);
+      linksLayer.setAttribute("height", height);
+    }
+
+    function render() {
+      const byId = Object.fromEntries(ITEMS.map(item => [item.id, item]));
+      const tasks = taskItems(ITEMS);
+      const { min, max } = computeBounds(ITEMS);
+      const totalDays = daysBetween(min, max);
+      const width = totalDays * DAY_WIDTH + 40;
+      const rows = uniqueTaskRows(tasks);
+      const rowCount = rows.length || 1;
+
+      renderLabels(ITEMS);
+      renderAxis(min, max, width);
+      renderGrid(min, max, rowCount, width);
+      renderItems(ITEMS, min, byId);
+    }
+
+    render();
+  </script>
+</body>
+</html>

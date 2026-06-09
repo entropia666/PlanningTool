@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "planning-item.schema.json",
+  "title": "Planning Item",
+  "description": "A task, milestone, or deliverable for the Gantt planning view.",
+  "type": "object",
+  "required": ["id", "type", "name"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier referenced by predecessors."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["task", "milestone", "deliverable"],
+      "description": "task = duration bar; milestone = diamond; deliverable = circle."
+    },
+    "name": {
+      "type": "string",
+      "description": "Short label shown on the chart."
+    },
+    "description": {
+      "type": "string",
+      "description": "Longer explanation shown in hover tooltip."
+    },
+    "start": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date (YYYY-MM-DD). Required for tasks."
+    },
+    "end": {
+      "type": "string",
+      "format": "date",
+      "description": "End date (YYYY-MM-DD). Required for tasks."
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Point-in-time date (YYYY-MM-DD). Required for milestones and deliverables."
+    },
+    "predecessors": {
+      "type": "array",
+      "items": { "type": "string" },
+      "default": [],
+      "description": "IDs of items that must finish before this one starts."
+    },
+    "assignee": { "type": "string" },
+    "status": {
+      "type": "string",
+      "enum": ["planned", "in-progress", "blocked", "done", "cancelled"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "medium", "high", "critical"]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes": { "type": "string" },
+    "color": {
+      "type": "string",
+      "description": "Optional CSS color override for this item."
+    },
+    "row": {
+      "type": "integer",
+      "description": "Row index (0-based) for tasks. Tasks with the same row share one lane."
+    },
+    "group": {
+      "type": "string",
+      "description": "Optional group name; tasks in the same group are placed on one row."
+    },
+    "row_label": {
+      "type": "string",
+      "description": "Optional label for the left column when multiple tasks share a row."
+    },
+    "anchor": {
+      "type": "string",
+      "description": "Optional task id; milestones/deliverables render on that task's row instead of their own."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "task" } } },
+      "then": { "required": ["start", "end"] }
+    },
+    {
+      "if": {
+        "properties": { "type": { "enum": ["milestone", "deliverable"] } }
+      },
+      "then": { "required": ["date"] }
+    }
+  ],
+  "additionalProperties": true
+}

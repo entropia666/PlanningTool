@@ -1,0 +1,10 @@
+{
+  "id": "joint-definition-phase",
+  "type": "milestone",
+  "name": "Joint Definition Phase",
+  "description": "Overall aircraft design — joint definition phase gate. Scheduled 3 months after Preliminary Design Review.",
+  "date": "2028-10-30",
+  "predecessors": ["preliminary-design-review"],
+  "status": "planned",
+  "tags": ["aircraft-design", "milestone", "joint-definition"]
+}

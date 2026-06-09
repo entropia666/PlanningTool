@@ -1,0 +1,10 @@
+{
+  "id": "concept-review",
+  "type": "milestone",
+  "name": "Concept Review",
+  "description": "Overall aircraft design — concept review gate.",
+  "date": "2027-04-30",
+  "predecessors": [],
+  "status": "planned",
+  "tags": ["aircraft-design", "milestone", "concept"]
+}

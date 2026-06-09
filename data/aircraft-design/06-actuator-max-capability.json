@@ -1,0 +1,10 @@
+{
+  "id": "actuator-max-capability",
+  "type": "deliverable",
+  "name": "Each actuator max capability force, stroke length",
+  "description": "Joint definition phase deliverable — each actuator maximum capability force and stroke length definition.",
+  "date": "2028-10-30",
+  "predecessors": ["joint-definition-phase"],
+  "status": "planned",
+  "tags": ["aircraft-design", "deliverable", "joint-definition", "actuator"]
+}
