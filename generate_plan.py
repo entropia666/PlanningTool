@@ -42,16 +42,19 @@ def load_items(data_dir: Path) -> list[dict]:
     return items
 
 
+ROWABLE_TYPES = frozenset({"task", "milestone", "deliverable"})
+
+
 def assign_rows(items: list[dict]) -> None:
-    """Assign row indices to tasks; milestones/deliverables share task rows."""
-    tasks = [item for item in items if item.get("type") == "task"]
-    if not tasks:
+    """Assign row indices; each deliverable/milestone gets its own row unless shared."""
+    rowable = [item for item in items if item.get("type") in ROWABLE_TYPES]
+    if not rowable:
         return
 
     by_id = {item["id"]: item for item in items}
     memo: dict[str, int] = {}
 
-    def depth(item_id: str, visiting: set[str]) -> int:
+    def task_depth(item_id: str, visiting: set[str]) -> int:
         if item_id in memo:
             return memo[item_id]
         if item_id in visiting:
@@ -63,14 +66,16 @@ def assign_rows(items: list[dict]) -> None:
             for p in item.get("predecessors", [])
             if by_id.get(p, {}).get("type") == "task"
         ]
-        value = max((depth(p, visiting) for p in preds), default=-1) + 1
+        value = max((task_depth(p, visiting) for p in preds), default=-1) + 1
         visiting.remove(item_id)
         memo[item_id] = value
         return value
 
     group_to_row: dict[str, int] = {}
     next_group_row = 0
-    for item in tasks:
+    for item in rowable:
+        if item.get("anchor"):
+            continue
         if "group" in item and "row" not in item:
             key = str(item["group"])
             if key not in group_to_row:
@@ -78,14 +83,16 @@ def assign_rows(items: list[dict]) -> None:
                 next_group_row += 1
             item["row"] = group_to_row[key]
 
-    for item in tasks:
-        if "row" not in item:
-            item["row"] = depth(item["id"], set())
+    for item in rowable:
+        if item.get("anchor") or "row" in item:
+            continue
+        if item["type"] == "task":
+            item["row"] = task_depth(item["id"], set())
             item["_auto_row"] = True
 
-    occupied = {item["row"] for item in tasks if not item.get("_auto_row")}
+    occupied = {item["row"] for item in rowable if "row" in item and not item.get("_auto_row")}
     for item in sorted(
-        (t for t in tasks if t.get("_auto_row")),
+        (i for i in rowable if i.get("_auto_row")),
         key=lambda i: (i["row"], i["id"]),
     ):
         row = item["row"]
@@ -94,12 +101,27 @@ def assign_rows(items: list[dict]) -> None:
         item["row"] = row
         occupied.add(row)
 
-    for item in tasks:
+    for item in rowable:
+        if item.get("anchor") or "row" in item:
+            continue
+        if item["type"] in ("milestone", "deliverable"):
+            row = 0
+            while row in occupied:
+                row += 1
+            item["row"] = row
+            occupied.add(row)
+
+    for item in rowable:
+        anchor_id = item.get("anchor")
+        if anchor_id and anchor_id in by_id and "row" in by_id[anchor_id]:
+            item["row"] = by_id[anchor_id]["row"]
+
+    for item in rowable:
         item.pop("_auto_row", None)
 
-    unique_rows = sorted({item["row"] for item in tasks})
+    unique_rows = sorted({item["row"] for item in rowable})
     row_map = {old: new for new, old in enumerate(unique_rows)}
-    for item in tasks:
+    for item in rowable:
         item["row"] = row_map[item["row"]]
 
 

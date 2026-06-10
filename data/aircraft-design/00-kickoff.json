@@ -1,0 +1,10 @@
+{
+  "id": "kickoff",
+  "type": "milestone",
+  "name": "Kickoff",
+  "description": "Overall aircraft design — project kickoff.",
+  "date": "2026-04-30",
+  "predecessors": [],
+  "status": "planned",
+  "tags": ["aircraft-design", "milestone", "kickoff"]
+}

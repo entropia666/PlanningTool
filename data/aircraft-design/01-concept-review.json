@@ -4,7 +4,7 @@
   "name": "Concept Review",
   "description": "Overall aircraft design — concept review gate.",
   "date": "2027-04-30",
-  "predecessors": [],
+  "predecessors": ["kickoff"],
   "status": "planned",
   "tags": ["aircraft-design", "milestone", "concept"]
 }

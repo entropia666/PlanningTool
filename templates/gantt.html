@@ -304,7 +304,7 @@
     const ROW_HEIGHT = 48;
     const HEADER_HEIGHT = 56;
     const LABEL_WIDTH = 220;
-    const DAY_WIDTH = 18;
+    const DAY_WIDTH = 3.6;
     const PADDING_DAYS = 3;
 
     const tooltip = document.getElementById("tooltip");
@@ -366,6 +366,21 @@
       return daysBetween(minDate, date) * DAY_WIDTH;
     }
 
+    function timelineStep(totalDays) {
+      if (totalDays > 730) return 90;
+      if (totalDays > 365) return 30;
+      if (totalDays > 90) return 14;
+      return 7;
+    }
+
+    function formatAxisDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      return totalDaysWide > 365 ? `${y}-${m}` : formatDate(d);
+    }
+
+    let totalDaysWide = 0;
+
     function formatFieldName(key) {
       return key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
     }
@@ -409,77 +424,56 @@
       el.addEventListener("mouseleave", hideTooltip);
     }
 
-    function taskItems(items) {
-      return items.filter(item => item.type === "task");
+    function rowableItems(items) {
+      return items.filter(item => item.type === "task" || item.type === "milestone" || item.type === "deliverable");
     }
 
-    function resolveMarkerRow(item, byId) {
-      if (item.anchor && byId[item.anchor]?.type === "task") {
-        return byId[item.anchor].row;
-      }
-      for (const predId of item.predecessors || []) {
-        const pred = byId[predId];
-        if (!pred) continue;
-        if (pred.type === "task") return pred.row;
-        const row = resolveMarkerRow(pred, byId);
-        if (row !== null) return row;
-      }
-      for (const other of Object.values(byId)) {
-        if (other.type !== "task") continue;
-        if ((other.predecessors || []).includes(item.id)) return other.row;
-      }
-      return taskItems(ITEMS)[0]?.row ?? 0;
+    function itemRow(item) {
+      return item.row ?? 0;
     }
 
-    function itemRow(item, byId) {
-      return item.type === "task" ? item.row : resolveMarkerRow(item, byId);
+    function itemsOnRow(row, rowable) {
+      return rowable.filter(item => item.row === row);
     }
 
-    function markerOffsetY(item) {
-      if (item.type === "milestone") return -14;
-      if (item.type === "deliverable") return 14;
-      return 0;
-    }
-
-    function tasksOnRow(row, tasks) {
-      return tasks.filter(task => task.row === row);
-    }
-
-    function taskBarOffsetY(task, tasks) {
-      const onRow = tasksOnRow(task.row, tasks).sort((a, b) => a.id.localeCompare(b.id));
+    function itemOffsetY(item, rowable) {
+      const onRow = itemsOnRow(item.row, rowable).sort((a, b) => a.id.localeCompare(b.id));
       if (onRow.length <= 1) return 0;
-      const index = onRow.findIndex(t => t.id === task.id);
+      const index = onRow.findIndex(i => i.id === item.id);
       const step = 12;
       return (index - (onRow.length - 1) / 2) * step;
     }
 
-    function uniqueTaskRows(tasks) {
-      return [...new Set(tasks.map(task => task.row))].sort((a, b) => a - b);
+    function uniqueRows(rowable) {
+      return [...new Set(rowable.map(item => item.row))].sort((a, b) => a - b);
     }
 
-    function rowLabel(row, tasks) {
-      const onRow = tasksOnRow(row, tasks);
-      const custom = onRow.find(task => task.row_label)?.row_label;
+    function rowLabel(row, rowable) {
+      const onRow = itemsOnRow(row, rowable);
+      const custom = onRow.find(item => item.row_label)?.row_label;
       if (custom) return custom;
-      return onRow.map(task => task.name).join(" · ");
+      if (onRow.length === 1) return onRow[0].name;
+      return onRow.map(item => item.name).join(" · ");
     }
 
     function renderLabels(items) {
-      const tasks = taskItems(items);
-      labelsColumn.innerHTML = uniqueTaskRows(tasks).map(row =>
-        `<div class="label-row" data-row="${row}">${rowLabel(row, tasks)}</div>`
+      const rowable = rowableItems(items);
+      labelsColumn.innerHTML = uniqueRows(rowable).map(row =>
+        `<div class="label-row" data-row="${row}">${rowLabel(row, rowable)}</div>`
       ).join("");
     }
 
     function renderAxis(minDate, maxDate, width) {
       timelineAxis.style.width = `${width}px`;
       const totalDays = daysBetween(minDate, maxDate);
+      totalDaysWide = totalDays;
+      const step = timelineStep(totalDays);
       let html = "";
-      for (let d = 0; d <= totalDays; d += 7) {
+      for (let d = 0; d <= totalDays; d += step) {
         const date = new Date(minDate);
         date.setDate(date.getDate() + d);
         const x = d * DAY_WIDTH;
-        html += `<span class="axis-label" style="left:${x}px">${formatDate(date)}</span>`;
+        html += `<span class="axis-label" style="left:${x}px">${formatAxisDate(date)}</span>`;
       }
       timelineAxis.innerHTML = html;
     }
@@ -493,7 +487,8 @@
 
       let svg = "";
       const totalDays = daysBetween(minDate, maxDate);
-      for (let d = 0; d <= totalDays; d++) {
+      const step = timelineStep(totalDays);
+      for (let d = 0; d <= totalDays; d += step) {
         const x = d * DAY_WIDTH + 0.5;
         svg += `<line class="grid-line" x1="${x}" y1="0" x2="${x}" y2="${height}"/>`;
       }
@@ -528,15 +523,16 @@
       linksLayer.appendChild(defs);
 
       const anchors = {};
-      const tasks = taskItems(items);
+      const rowable = rowableItems(items);
 
       for (const item of items) {
-        const row = itemRow(item, byId);
-        const cy = centerY(row) + markerOffsetY(item);
+        const row = itemRow(item);
+        const offsetY = itemOffsetY(item, rowable);
+        const cy = centerY(row) + offsetY;
         const color = item.color || null;
 
         if (item.type === "task") {
-          const taskCy = centerY(row) + taskBarOffsetY(item, tasks);
+          const taskCy = cy;
           const x1 = xForDate(parseDate(item.start), minDate);
           const x2 = xForDate(parseDate(item.end), minDate);
           const barHeight = 22;
@@ -620,11 +616,11 @@
 
     function render() {
       const byId = Object.fromEntries(ITEMS.map(item => [item.id, item]));
-      const tasks = taskItems(ITEMS);
+      const rowable = rowableItems(ITEMS);
       const { min, max } = computeBounds(ITEMS);
       const totalDays = daysBetween(min, max);
       const width = totalDays * DAY_WIDTH + 40;
-      const rows = uniqueTaskRows(tasks);
+      const rows = uniqueRows(rowable);
       const rowCount = rows.length || 1;
 
       renderLabels(ITEMS);

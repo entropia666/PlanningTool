@@ -64,19 +64,19 @@
     },
     "row": {
       "type": "integer",
-      "description": "Row index (0-based) for tasks. Tasks with the same row share one lane."
+      "description": "Row index (0-based). Items with the same row share one lane."
     },
     "group": {
       "type": "string",
-      "description": "Optional group name; tasks in the same group are placed on one row."
+      "description": "Optional group name; items in the same group are placed on one row."
     },
     "row_label": {
       "type": "string",
-      "description": "Optional label for the left column when multiple tasks share a row."
+      "description": "Optional label for the left column when multiple items share a row."
     },
     "anchor": {
       "type": "string",
-      "description": "Optional task id; milestones/deliverables render on that task's row instead of their own."
+      "description": "Optional item id; render on that item's row instead of a dedicated row."
     }
   },
   "allOf": [

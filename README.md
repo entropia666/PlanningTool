@@ -33,16 +33,15 @@ Each file is one object. Required fields depend on type:
 
 Additional fields (`description`, `assignee`, `status`, `priority`, `tags`, `notes`, `color`, etc.) are shown in the hover tooltip. Any extra keys you add are also displayed.
 
-Only **tasks** occupy rows. Milestones and deliverables render as symbols on a related task row (inferred from `predecessors`, `anchor`, or the next dependent task).
+**Tasks**, **milestones**, and **deliverables** each get their own row by default. To share a row with another item:
 
-**Sharing a row** — put multiple task bars on the same lane either way:
-
-- Set the same `"row": 0` (or any index) on each task, or
+- Set the same `"row": 0` (or any index) on each item, or
 - Give them the same `"group": "backend"` string (easier to read in JSON)
+- Set `"anchor": "other-item-id"` to place on another item's row without assigning a row number
 
-Optional `"row_label"` sets the left-column caption when several tasks share a row (defaults to task names joined with ` · `).
+Optional `"row_label"` sets the left-column caption when several items share a row (defaults to names joined with ` · `).
 
-If bars on the same row overlap in time, they are stacked slightly within the row.
+If items on the same row overlap in time, they are stacked slightly within the row.
 
 ### Example task
 

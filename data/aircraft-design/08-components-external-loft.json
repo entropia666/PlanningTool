@@ -2,7 +2,7 @@
   "id": "components-external-loft",
   "type": "deliverable",
   "name": "Components external loft",
-  "description": "Joint definition phase deliverable — external loft (aero shape) for components: control surfaces, flaps, fairings, and water skid.",
+  "description": "Joint definition phase deliverable — external loft (aero shape) for components: control surfaces, flaps, fairings, and water skid. Ideally, this should be delayed as much as possible to allow for aerodynamic optimisation, stability & control fine tuning or fixing",
   "date": "2028-10-30",
   "predecessors": ["joint-definition-phase"],
   "status": "planned",
