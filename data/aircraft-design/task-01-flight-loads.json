@@ -1,0 +1,14 @@
+{
+  "id": "flight-loads",
+  "type": "task",
+  "name": "Flight loads (manoeuvre and gust)",
+  "description": "Development of manoeuvre and gust load cases for primary structure and overall aircraft loads envelope.",
+  "start": "2027-10-01",
+  "end": "2028-09-15",
+  "predecessors": ["preliminary-design-review"],
+  "group": "loads",
+  "row_label": "Loads analysis",
+  "status": "planned",
+  "assignee": "Flight Physics",
+  "tags": ["aircraft-design", "task", "loads", "flight-physics"]
+}

@@ -41,7 +41,9 @@ Additional fields (`description`, `assignee`, `status`, `priority`, `tags`, `not
 
 Optional `"row_label"` sets the left-column caption when several items share a row (defaults to names joined with ` · `).
 
-If items on the same row overlap in time, they are stacked slightly within the row.
+**Milestones** automatically share a row with the latest-finishing task that feeds their deliverables (unless `row`, `group`, or `anchor` is set). Use `"anchor": "task-id"` to pin manually.
+
+If items on the same row overlap in time, the row expands into **subrows** (stacked lanes with light divider lines).
 
 ### Example task
 

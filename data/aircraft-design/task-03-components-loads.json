@@ -1,0 +1,13 @@
+{
+  "id": "components-loads",
+  "type": "task",
+  "name": "Components loads",
+  "description": "Derivation of component-level external and attachment loads for control surfaces, flaps, fairings, propulsion, landing gear, and water skid.",
+  "start": "2028-05-01",
+  "end": "2028-10-20",
+  "predecessors": ["flight-loads", "ground-water-loads"],
+  "group": "loads",
+  "status": "planned",
+  "assignee": "Flight Physics",
+  "tags": ["aircraft-design", "task", "loads", "flight-physics"]
+}

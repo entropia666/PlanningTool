@@ -1,0 +1,13 @@
+{
+  "id": "ground-water-loads",
+  "type": "task",
+  "name": "Ground and water loads",
+  "description": "Development of landing, ground handling, and water operation load cases.",
+  "start": "2028-02-01",
+  "end": "2028-09-30",
+  "predecessors": ["preliminary-design-review"],
+  "group": "loads",
+  "status": "planned",
+  "assignee": "Flight Physics",
+  "tags": ["aircraft-design", "task", "loads", "flight-physics"]
+}

@@ -45,8 +45,20 @@ def load_items(data_dir: Path) -> list[dict]:
 ROWABLE_TYPES = frozenset({"task", "milestone", "deliverable"})
 
 
+def _task_ids_for_milestone(milestone_id: str, items: list[dict], by_id: dict[str, dict]) -> list[str]:
+    """Task predecessors of items gated by this milestone."""
+    task_ids: list[str] = []
+    for item in items:
+        if milestone_id not in item.get("predecessors", []):
+            continue
+        for pred in item.get("predecessors", []):
+            if by_id.get(pred, {}).get("type") == "task":
+                task_ids.append(pred)
+    return task_ids
+
+
 def assign_rows(items: list[dict]) -> None:
-    """Assign row indices; each deliverable/milestone gets its own row unless shared."""
+    """Assign row indices; deliverables get own rows; milestones share final task rows."""
     rowable = [item for item in items if item.get("type") in ROWABLE_TYPES]
     if not rowable:
         return
@@ -100,6 +112,16 @@ def assign_rows(items: list[dict]) -> None:
             row += 1
         item["row"] = row
         occupied.add(row)
+
+    for item in rowable:
+        if item.get("anchor") or "row" in item or item["type"] != "milestone":
+            continue
+        task_preds = _task_ids_for_milestone(item["id"], items, by_id)
+        if not task_preds:
+            continue
+        final_task = max(task_preds, key=lambda tid: parse_date(by_id[tid]["end"]))
+        if "row" in by_id[final_task]:
+            item["row"] = by_id[final_task]["row"]
 
     for item in rowable:
         if item.get("anchor") or "row" in item:

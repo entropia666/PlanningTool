@@ -130,7 +130,7 @@
     }
 
     .label-row {
-      height: var(--row-height);
+      min-height: var(--row-height);
       padding: 0 12px;
       display: flex;
       align-items: center;
@@ -139,6 +139,11 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+
+    .subrow-line {
+      stroke: #eef1f5;
+      stroke-width: 1;
     }
 
     .label-row .type-badge {
@@ -302,6 +307,7 @@
   <script>
     const ITEMS = JSON.parse(document.getElementById("plan-data").textContent);
     const ROW_HEIGHT = 48;
+    const MIN_LANE_HEIGHT = 24;
     const HEADER_HEIGHT = 56;
     const LABEL_WIDTH = 220;
     const DAY_WIDTH = 3.6;
@@ -436,12 +442,74 @@
       return rowable.filter(item => item.row === row);
     }
 
-    function itemOffsetY(item, rowable) {
-      const onRow = itemsOnRow(item.row, rowable).sort((a, b) => a.id.localeCompare(b.id));
-      if (onRow.length <= 1) return 0;
-      const index = onRow.findIndex(i => i.id === item.id);
-      const step = 12;
-      return (index - (onRow.length - 1) / 2) * step;
+    function itemTimeRange(item) {
+      if (item.type === "task") {
+        return {
+          start: parseDate(item.start).getTime(),
+          end: parseDate(item.end).getTime(),
+        };
+      }
+      const t = parseDate(item.date).getTime();
+      return { start: t, end: t };
+    }
+
+    function rangesOverlap(a, b) {
+      return a.start <= b.end && b.start <= a.end;
+    }
+
+    function assignSubrows(itemsOnRow) {
+      const sorted = [...itemsOnRow].sort((a, b) => {
+        const ta = itemTimeRange(a);
+        const tb = itemTimeRange(b);
+        return ta.start - tb.start || ta.end - tb.end || a.id.localeCompare(b.id);
+      });
+      const lanes = [];
+      const subrows = new Map();
+
+      for (const item of sorted) {
+        const range = itemTimeRange(item);
+        let lane = lanes.findIndex(existing => !existing.some(r => rangesOverlap(r, range)));
+        if (lane === -1) {
+          lane = lanes.length;
+          lanes.push([]);
+        }
+        lanes[lane].push(range);
+        subrows.set(item.id, lane);
+      }
+
+      return { subrows, laneCount: Math.max(lanes.length, 1) };
+    }
+
+    function buildRowLayout(rowable) {
+      const rows = uniqueRows(rowable);
+      const layout = {};
+      let top = 0;
+
+      for (const row of rows) {
+        const onRow = itemsOnRow(row, rowable);
+        const { subrows, laneCount } = assignSubrows(onRow);
+        const height = Math.max(ROW_HEIGHT, laneCount * MIN_LANE_HEIGHT);
+        layout[row] = { top, height, laneCount, subrows };
+        top += height;
+      }
+
+      return { layout, totalHeight: top };
+    }
+
+    function itemCenterY(item, layout) {
+      const row = itemRow(item);
+      const rowInfo = layout[row];
+      const lane = rowInfo.subrows.get(item.id) ?? 0;
+      const laneHeight = rowInfo.height / rowInfo.laneCount;
+      return rowInfo.top + lane * laneHeight + laneHeight / 2;
+    }
+
+    function taskBarHeight(laneHeight) {
+      return Math.max(14, Math.min(22, laneHeight - 6));
+    }
+
+    function markerSize(laneHeight, defaultSize) {
+      return Math.max(8, Math.min(defaultSize, laneHeight * 0.45));
     }
 
     function uniqueRows(rowable) {
@@ -456,11 +524,12 @@
       return onRow.map(item => item.name).join(" · ");
     }
 
-    function renderLabels(items) {
+    function renderLabels(items, layout) {
       const rowable = rowableItems(items);
-      labelsColumn.innerHTML = uniqueRows(rowable).map(row =>
-        `<div class="label-row" data-row="${row}">${rowLabel(row, rowable)}</div>`
-      ).join("");
+      labelsColumn.innerHTML = uniqueRows(rowable).map(row => {
+        const height = layout[row].height;
+        return `<div class="label-row" data-row="${row}" style="height:${height}px">${rowLabel(row, rowable)}</div>`;
+      }).join("");
     }
 
     function renderAxis(minDate, maxDate, width) {
@@ -478,32 +547,32 @@
       timelineAxis.innerHTML = html;
     }
 
-    function renderGrid(minDate, maxDate, rowCount, width) {
-      const height = rowCount * ROW_HEIGHT;
+    function renderGrid(minDate, maxDate, layout, totalHeight, width) {
       gridLayer.setAttribute("width", width);
-      gridLayer.setAttribute("height", height);
+      gridLayer.setAttribute("height", totalHeight);
       chartCanvas.style.width = `${width}px`;
-      chartCanvas.style.height = `${height}px`;
+      chartCanvas.style.height = `${totalHeight}px`;
 
       let svg = "";
       const totalDays = daysBetween(minDate, maxDate);
       const step = timelineStep(totalDays);
       for (let d = 0; d <= totalDays; d += step) {
         const x = d * DAY_WIDTH + 0.5;
-        svg += `<line class="grid-line" x1="${x}" y1="0" x2="${x}" y2="${height}"/>`;
+        svg += `<line class="grid-line" x1="${x}" y1="0" x2="${x}" y2="${totalHeight}"/>`;
       }
-      for (let r = 0; r <= rowCount; r++) {
-        const y = r * ROW_HEIGHT + 0.5;
-        svg += `<line class="grid-line" x1="0" y1="${y}" x2="${width}" y2="${y}"/>`;
+
+      for (const rowInfo of Object.values(layout)) {
+        const laneHeight = rowInfo.height / rowInfo.laneCount;
+        svg += `<line class="grid-line" x1="0" y1="${rowInfo.top + rowInfo.height + 0.5}" x2="${width}" y2="${rowInfo.top + rowInfo.height + 0.5}"/>`;
+        for (let lane = 1; lane < rowInfo.laneCount; lane++) {
+          const y = rowInfo.top + lane * laneHeight + 0.5;
+          svg += `<line class="subrow-line" x1="0" y1="${y}" x2="${width}" y2="${y}"/>`;
+        }
       }
+
       gridLayer.innerHTML = svg;
     }
-
-    function centerY(row) {
-      return row * ROW_HEIGHT + ROW_HEIGHT / 2;
-    }
-
-    function renderItems(items, minDate, byId) {
+    function renderItems(items, minDate, layout) {
       itemsLayer.innerHTML = "";
       linksLayer.innerHTML = "";
 
@@ -523,23 +592,22 @@
       linksLayer.appendChild(defs);
 
       const anchors = {};
-      const rowable = rowableItems(items);
 
       for (const item of items) {
         const row = itemRow(item);
-        const offsetY = itemOffsetY(item, rowable);
-        const cy = centerY(row) + offsetY;
+        const rowInfo = layout[row];
+        const laneHeight = rowInfo.height / rowInfo.laneCount;
+        const cy = itemCenterY(item, layout);
         const color = item.color || null;
 
         if (item.type === "task") {
-          const taskCy = cy;
+          const barHeight = taskBarHeight(laneHeight);
           const x1 = xForDate(parseDate(item.start), minDate);
           const x2 = xForDate(parseDate(item.end), minDate);
-          const barHeight = 22;
           const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
           rect.setAttribute("class", "task-bar");
           rect.setAttribute("x", x1);
-          rect.setAttribute("y", taskCy - barHeight / 2);
+          rect.setAttribute("y", cy - barHeight / 2);
           rect.setAttribute("width", Math.max(x2 - x1, 6));
           rect.setAttribute("height", barHeight);
           if (color) {
@@ -548,10 +616,10 @@
           }
           bindTooltip(rect, item);
           itemsLayer.appendChild(rect);
-          anchors[item.id] = { start: { x: x1, y: taskCy }, end: { x: x2, y: taskCy } };
+          anchors[item.id] = { start: { x: x1, y: cy }, end: { x: x2, y: cy } };
         } else if (item.type === "milestone") {
           const x = xForDate(parseDate(item.date), minDate);
-          const size = 12;
+          const size = markerSize(laneHeight, 12);
           const diamond = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
           diamond.setAttribute("class", "milestone-shape");
           diamond.setAttribute(
@@ -565,9 +633,9 @@
           bindTooltip(diamond, item);
           itemsLayer.appendChild(diamond);
           anchors[item.id] = { start: { x, y: cy }, end: { x, y: cy } };
-        } else {
+        } else if (item.type === "deliverable") {
           const x = xForDate(parseDate(item.date), minDate);
-          const r = 9;
+          const r = markerSize(laneHeight, 9);
           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           circle.setAttribute("class", "deliverable-shape");
           circle.setAttribute("cx", x);
@@ -615,18 +683,16 @@
     }
 
     function render() {
-      const byId = Object.fromEntries(ITEMS.map(item => [item.id, item]));
       const rowable = rowableItems(ITEMS);
+      const { layout, totalHeight } = buildRowLayout(rowable);
       const { min, max } = computeBounds(ITEMS);
       const totalDays = daysBetween(min, max);
       const width = totalDays * DAY_WIDTH + 40;
-      const rows = uniqueRows(rowable);
-      const rowCount = rows.length || 1;
 
-      renderLabels(ITEMS);
+      renderLabels(ITEMS, layout);
       renderAxis(min, max, width);
-      renderGrid(min, max, rowCount, width);
-      renderItems(ITEMS, min, byId);
+      renderGrid(min, max, layout, totalHeight, width);
+      renderItems(ITEMS, min, layout);
     }
 
     render();
