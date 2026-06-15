@@ -1,0 +1,11 @@
+{
+  "id": "reverse-engineer-cl415",
+  "type": "deliverable",
+  "name": "Reverse engineer of CL 415",
+  "description": "Concept review deliverable — reverse engineering of the CL-415 reference aircraft.",
+  "date": "2027-04-30",
+  "predecessors": [],
+  "group": "reference-aircraft",
+  "status": "planned",
+  "tags": ["aircraft-design", "deliverable", "concept-review", "reverse-engineering", "CL-415"]
+}

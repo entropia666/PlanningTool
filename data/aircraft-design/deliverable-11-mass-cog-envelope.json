@@ -1,0 +1,11 @@
+{
+  "id": "mass-cog-envelope",
+  "type": "deliverable",
+  "name": "Mass and CoG envelope",
+  "description": "Preliminary design review deliverable — aircraft mass and centre-of-gravity envelope across the operational and design spectrum.",
+  "date": "2028-07-30",
+  "predecessors": [],
+  "group": "mass",
+  "status": "planned",
+  "tags": ["aircraft-design", "deliverable", "preliminary-design", "mass", "weight", "cog"]
+}

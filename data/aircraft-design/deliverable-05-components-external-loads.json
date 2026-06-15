@@ -4,7 +4,8 @@
   "name": "Components external loads",
   "description": "Joint definition phase deliverable — external loads for components: control surfaces (including attachment loads), flaps, fairings, engine, landing gear, and water skid.",
   "date": "2028-10-30",
-  "predecessors": ["joint-definition-phase", "components-loads", "ground-water-loads"],
+  "predecessors": ["components-loads", "ground-water-loads"],
+  "group": "loads",
   "status": "planned",
   "tags": ["aircraft-design", "deliverable", "joint-definition", "components", "loads"],
   "components": ["control-surfaces", "flaps", "fairings", "engine", "landing-gear", "water-skid"]

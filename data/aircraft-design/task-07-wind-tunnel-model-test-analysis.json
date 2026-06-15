@@ -1,0 +1,14 @@
+{
+  "id": "wind-tunnel-model-test-analysis",
+  "type": "task",
+  "name": "Wind tunnel model manufacturing, test and data analysis",
+  "description": "Manufacture wind tunnel model, execute test campaign, and analyse aerodynamic data ahead of PDR.",
+  "start": "2027-05-01",
+  "end": "2028-04-30",
+  "predecessors": ["concept-review"],
+  "group": "aerodynamics",
+  "row_label": "Aerodynamics",
+  "status": "planned",
+  "assignee": "Flight Physics",
+  "tags": ["aircraft-design", "task", "aerodynamics", "wind-tunnel", "flight-physics"]
+}

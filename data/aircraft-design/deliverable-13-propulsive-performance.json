@@ -1,0 +1,13 @@
+{
+  "id": "propulsive-performance",
+  "type": "deliverable",
+  "name": "Propulsive performance",
+  "description": "Preliminary design review deliverable — propulsive performance data, due three months before PDR. Provided by an external team.",
+  "date": "2028-04-30",
+  "predecessors": [],
+  "group": "propulsion",
+  "status": "planned",
+  "color": "#9333ea",
+  "tags": ["aircraft-design", "deliverable", "preliminary-design", "propulsion", "performance", "external"],
+  "source": "external"
+}

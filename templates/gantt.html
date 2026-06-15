@@ -19,7 +19,7 @@
       --arrow: #64748b;
       --label-width: 220px;
       --row-height: 48px;
-      --header-height: 56px;
+      --header-height: 72px;
     }
 
     * { box-sizing: border-box; }
@@ -36,8 +36,9 @@
       background: var(--panel);
       border-bottom: 1px solid var(--border);
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 16px;
+      flex-wrap: wrap;
     }
 
     header h1 {
@@ -51,6 +52,46 @@
       gap: 16px;
       font-size: 0.85rem;
       color: var(--muted);
+      flex: 1;
+    }
+
+    .zoom-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    .zoom-controls button {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .zoom-controls button:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .zoom-controls input[type="range"] {
+      width: 120px;
+      accent-color: var(--task);
+      cursor: pointer;
+    }
+
+    .zoom-hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      white-space: nowrap;
     }
 
     .legend-item {
@@ -103,6 +144,59 @@
       min-width: var(--label-width);
       border-right: 1px solid var(--border);
       height: var(--header-height);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 12px 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .timeline-axis {
+      height: var(--header-height);
+      position: relative;
+    }
+
+    .axis-label {
+      position: absolute;
+      top: 6px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .milestone-marker {
+      position: absolute;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      z-index: 2;
+      max-width: 120px;
+    }
+
+    .milestone-marker-diamond {
+      width: 12px;
+      height: 12px;
+      background: var(--milestone);
+      border: 1.5px solid #d97706;
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .milestone-marker-label {
+      font-size: 0.68rem;
+      line-height: 1.2;
+      color: #92400e;
+      text-align: center;
+      font-weight: 600;
+      white-space: normal;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
 
     .timeline-scroll-x {
@@ -110,9 +204,15 @@
       flex: 1;
     }
 
-    .timeline-axis {
-      height: var(--header-height);
-      position: relative;
+    .milestone-marker:hover .milestone-marker-diamond {
+      filter: brightness(1.08);
+    }
+
+    .milestone-line {
+      stroke: var(--milestone);
+      stroke-width: 2;
+      opacity: 0.55;
+      pointer-events: none;
     }
 
     .chart-body {
@@ -125,8 +225,25 @@
       width: var(--label-width);
       min-width: var(--label-width);
       border-right: 1px solid var(--border);
-      overflow: hidden;
+      overflow-x: auto;
+      overflow-y: hidden;
       flex-shrink: 0;
+      scrollbar-width: thin;
+    }
+
+    .labels-column::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+
+    .labels-column::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 999px;
+    }
+
+    .labels-inner {
+      min-width: 100%;
+      width: max-content;
     }
 
     .label-row {
@@ -137,8 +254,11 @@
       border-bottom: 1px solid var(--grid);
       font-size: 0.875rem;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      cursor: default;
+    }
+
+    .label-row:hover {
+      background: #f8fafc;
     }
 
     .subrow-line {
@@ -180,15 +300,6 @@
     .grid-line {
       stroke: var(--grid);
       stroke-width: 1;
-    }
-
-    .axis-label {
-      position: absolute;
-      top: 8px;
-      font-size: 0.75rem;
-      color: var(--muted);
-      transform: translateX(-50%);
-      white-space: nowrap;
     }
 
     .task-bar {
@@ -267,6 +378,14 @@
       margin: 0;
       word-break: break-word;
     }
+
+    #tooltip.label-tip h3 {
+      margin: 0;
+    }
+
+    #tooltip.label-tip dl {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -276,12 +395,19 @@
       <span class="legend-item"><span class="legend-bar"></span> Task</span>
       <span class="legend-item"><span class="legend-diamond"></span> Milestone</span>
       <span class="legend-item"><span class="legend-circle"></span> Deliverable</span>
+      <span class="zoom-hint">Ctrl + scroll to zoom</span>
+    </div>
+    <div class="zoom-controls">
+      <button id="zoom-out" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+      <input id="zoom-slider" type="range" min="0" max="100" value="50" aria-label="Timeline zoom">
+      <button id="zoom-in" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+      <button id="zoom-fit" type="button" title="Fit timeline to view">Fit</button>
     </div>
   </header>
 
   <div class="chart-shell">
     <div class="timeline-header">
-      <div class="label-corner"></div>
+      <div class="label-corner">Milestones</div>
       <div class="timeline-scroll-x" id="timeline-scroll-x">
         <div class="timeline-axis" id="timeline-axis"></div>
       </div>
@@ -308,10 +434,17 @@
     const ITEMS = JSON.parse(document.getElementById("plan-data").textContent);
     const ROW_HEIGHT = 48;
     const MIN_LANE_HEIGHT = 24;
-    const HEADER_HEIGHT = 56;
+    const HEADER_HEIGHT = 72;
     const LABEL_WIDTH = 220;
-    const DAY_WIDTH = 3.6;
+    const BASE_DAY_WIDTH = 3.6;
+    const MIN_DAY_WIDTH = 0.35;
+    const MAX_DAY_WIDTH = 22;
     const PADDING_DAYS = 3;
+
+    let dayWidth = BASE_DAY_WIDTH;
+    let viewBounds = null;
+    let cachedLayout = null;
+    let totalDaysWide = 0;
 
     const tooltip = document.getElementById("tooltip");
     const chartScroll = document.getElementById("chart-scroll");
@@ -322,14 +455,35 @@
     const linksLayer = document.getElementById("links-layer");
     const itemsLayer = document.getElementById("items-layer");
     const timelineAxis = document.getElementById("timeline-axis");
+    const zoomSlider = document.getElementById("zoom-slider");
+    const zoomInBtn = document.getElementById("zoom-in");
+    const zoomOutBtn = document.getElementById("zoom-out");
+    const zoomFitBtn = document.getElementById("zoom-fit");
 
-    chartScroll.addEventListener("scroll", () => {
+    let syncingScroll = false;
+    function syncScrollFromChart() {
+      if (syncingScroll) return;
+      syncingScroll = true;
       timelineScrollX.scrollLeft = chartScroll.scrollLeft;
       labelsColumn.scrollTop = chartScroll.scrollTop;
-    });
-    timelineScrollX.addEventListener("scroll", () => {
+      syncingScroll = false;
+    }
+    function syncScrollFromTimeline() {
+      if (syncingScroll) return;
+      syncingScroll = true;
       chartScroll.scrollLeft = timelineScrollX.scrollLeft;
-    });
+      syncingScroll = false;
+    }
+    function syncScrollFromLabels() {
+      if (syncingScroll) return;
+      syncingScroll = true;
+      chartScroll.scrollTop = labelsColumn.scrollTop;
+      syncingScroll = false;
+    }
+
+    chartScroll.addEventListener("scroll", syncScrollFromChart);
+    timelineScrollX.addEventListener("scroll", syncScrollFromTimeline);
+    labelsColumn.addEventListener("scroll", syncScrollFromLabels);
 
     function parseDate(str) {
       const [y, m, d] = str.split("-").map(Number);
@@ -369,14 +523,42 @@
     }
 
     function xForDate(date, minDate) {
-      return daysBetween(minDate, date) * DAY_WIDTH;
+      return daysBetween(minDate, date) * dayWidth;
     }
 
-    function timelineStep(totalDays) {
-      if (totalDays > 730) return 90;
-      if (totalDays > 365) return 30;
-      if (totalDays > 90) return 14;
-      return 7;
+    function contentWidth(totalDays) {
+      return totalDays * dayWidth + 40;
+    }
+
+    function clampDayWidth(value) {
+      return Math.min(MAX_DAY_WIDTH, Math.max(MIN_DAY_WIDTH, value));
+    }
+
+    function dayWidthToSlider(value) {
+      const minLog = Math.log(MIN_DAY_WIDTH);
+      const maxLog = Math.log(MAX_DAY_WIDTH);
+      const t = (Math.log(value) - minLog) / (maxLog - minLog);
+      return Math.round(t * 100);
+    }
+
+    function sliderToDayWidth(value) {
+      const minLog = Math.log(MIN_DAY_WIDTH);
+      const maxLog = Math.log(MAX_DAY_WIDTH);
+      const t = value / 100;
+      return clampDayWidth(Math.exp(minLog + t * (maxLog - minLog)));
+    }
+
+    function updateZoomSlider() {
+      zoomSlider.value = String(dayWidthToSlider(dayWidth));
+    }
+
+    function timelineStep() {
+      const weekPx = 7 * dayWidth;
+      if (weekPx >= 56) return 7;
+      if (weekPx >= 28) return 14;
+      if (30 * dayWidth >= 48) return 30;
+      if (90 * dayWidth >= 48) return 90;
+      return Math.max(1, Math.round(40 / dayWidth));
     }
 
     function formatAxisDate(d) {
@@ -385,7 +567,13 @@
       return totalDaysWide > 365 ? `${y}-${m}` : formatDate(d);
     }
 
-    let totalDaysWide = 0;
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
 
     function formatFieldName(key) {
       return key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -422,6 +610,7 @@
 
     function hideTooltip() {
       tooltip.classList.remove("visible");
+      tooltip.classList.remove("label-tip");
     }
 
     function bindTooltip(el, item) {
@@ -430,8 +619,25 @@
       el.addEventListener("mouseleave", hideTooltip);
     }
 
+    function showLabelTooltip(text, event) {
+      tooltip.innerHTML = `<h3>${escapeHtml(text)}</h3>`;
+      tooltip.classList.add("label-tip");
+      tooltip.classList.add("visible");
+      moveTooltip(event);
+    }
+
+    function bindLabelTooltip(el, text) {
+      el.addEventListener("mouseenter", e => showLabelTooltip(text, e));
+      el.addEventListener("mousemove", moveTooltip);
+      el.addEventListener("mouseleave", hideTooltip);
+    }
+
     function rowableItems(items) {
-      return items.filter(item => item.type === "task" || item.type === "milestone" || item.type === "deliverable");
+      return items.filter(item => item.type === "task" || item.type === "deliverable");
+    }
+
+    function milestoneItems(items) {
+      return items.filter(item => item.type === "milestone");
     }
 
     function itemRow(item) {
@@ -466,15 +672,33 @@
       const lanes = [];
       const subrows = new Map();
 
+      function placeInLane(item, lane) {
+        while (lanes.length <= lane) lanes.push([]);
+        lanes[lane].push(itemTimeRange(item));
+        subrows.set(item.id, lane);
+      }
+
       for (const item of sorted) {
+        const anchorId = item.anchor;
+        if (anchorId && subrows.has(anchorId)) {
+          placeInLane(item, subrows.get(anchorId));
+          continue;
+        }
+
         const range = itemTimeRange(item);
         let lane = lanes.findIndex(existing => !existing.some(r => rangesOverlap(r, range)));
         if (lane === -1) {
           lane = lanes.length;
-          lanes.push([]);
         }
-        lanes[lane].push(range);
-        subrows.set(item.id, lane);
+        placeInLane(item, lane);
+      }
+
+      for (const item of sorted) {
+        if (subrows.has(item.id)) continue;
+        const anchorId = item.anchor;
+        if (anchorId && subrows.has(anchorId)) {
+          placeInLane(item, subrows.get(anchorId));
+        }
       }
 
       return { subrows, laneCount: Math.max(lanes.length, 1) };
@@ -512,6 +736,26 @@
       return Math.max(8, Math.min(defaultSize, laneHeight * 0.45));
     }
 
+    function dependencyEndpoints(source, target, sourceItem, targetItem) {
+      let x1 = source.end.x;
+      let y1 = source.end.y;
+      let x2 = target.start.x;
+      let y2 = target.start.y;
+
+      if (sourceItem.type === "deliverable") {
+        const r = source.radius ?? 9;
+        x1 = source.end.x + r;
+      }
+      if (targetItem.type === "deliverable") {
+        const r = target.radius ?? 9;
+        x2 = target.start.x - r;
+      } else if (targetItem.type === "task") {
+        x2 = target.start.x;
+      }
+
+      return { x1, y1, x2, y2 };
+    }
+
     function uniqueRows(rowable) {
       return [...new Set(rowable.map(item => item.row))].sort((a, b) => a - b);
     }
@@ -524,30 +768,58 @@
       return onRow.map(item => item.name).join(" · ");
     }
 
-    function renderLabels(items, layout) {
+    function renderLabels(items, rowLayout, totalHeight) {
       const rowable = rowableItems(items);
-      labelsColumn.innerHTML = uniqueRows(rowable).map(row => {
-        const height = layout[row].height;
-        return `<div class="label-row" data-row="${row}" style="height:${height}px">${rowLabel(row, rowable)}</div>`;
+      const rowsHtml = uniqueRows(rowable).map(row => {
+        const height = rowLayout[row].height;
+        const text = rowLabel(row, rowable);
+        return `<div class="label-row" data-row="${row}" style="height:${height}px">${escapeHtml(text)}</div>`;
       }).join("");
+      labelsColumn.innerHTML = `<div class="labels-inner" style="min-height:${totalHeight}px">${rowsHtml}</div>`;
+      labelsColumn.querySelectorAll(".label-row").forEach(el => {
+        bindLabelTooltip(el, el.textContent);
+      });
     }
 
-    function renderAxis(minDate, maxDate, width) {
+    function renderAxis(minDate, maxDate, width, milestones) {
       timelineAxis.style.width = `${width}px`;
       const totalDays = daysBetween(minDate, maxDate);
       totalDaysWide = totalDays;
-      const step = timelineStep(totalDays);
+      const step = timelineStep();
       let html = "";
       for (let d = 0; d <= totalDays; d += step) {
         const date = new Date(minDate);
         date.setDate(date.getDate() + d);
-        const x = d * DAY_WIDTH;
+        const x = d * dayWidth;
         html += `<span class="axis-label" style="left:${x}px">${formatAxisDate(date)}</span>`;
       }
+
+      const sorted = [...milestones].sort(
+        (a, b) => parseDate(a.date) - parseDate(b.date) || a.id.localeCompare(b.id)
+      );
+      let lane = 0;
+      let lastX = -Infinity;
+      const overlapThreshold = Math.max(48, 24 * dayWidth);
+      for (const ms of sorted) {
+        const x = xForDate(parseDate(ms.date), minDate);
+        if (x - lastX < overlapThreshold) lane = 1 - lane;
+        else lane = 0;
+        lastX = x;
+        const top = 34 + lane * 22;
+        html += `<div class="milestone-marker" style="left:${x}px; top:${top}px" data-id="${ms.id}">
+          <div class="milestone-marker-diamond"></div>
+          <div class="milestone-marker-label">${ms.name}</div>
+        </div>`;
+      }
+
       timelineAxis.innerHTML = html;
+      timelineAxis.querySelectorAll(".milestone-marker").forEach(el => {
+        const ms = milestones.find(item => item.id === el.dataset.id);
+        if (ms) bindTooltip(el, ms);
+      });
     }
 
-    function renderGrid(minDate, maxDate, layout, totalHeight, width) {
+    function renderGrid(minDate, maxDate, layout, totalHeight, width, milestones) {
       gridLayer.setAttribute("width", width);
       gridLayer.setAttribute("height", totalHeight);
       chartCanvas.style.width = `${width}px`;
@@ -555,10 +827,15 @@
 
       let svg = "";
       const totalDays = daysBetween(minDate, maxDate);
-      const step = timelineStep(totalDays);
+      const step = timelineStep();
       for (let d = 0; d <= totalDays; d += step) {
-        const x = d * DAY_WIDTH + 0.5;
+        const x = d * dayWidth + 0.5;
         svg += `<line class="grid-line" x1="${x}" y1="0" x2="${x}" y2="${totalHeight}"/>`;
+      }
+
+      for (const ms of milestones) {
+        const x = xForDate(parseDate(ms.date), minDate) + 0.5;
+        svg += `<line class="milestone-line" x1="${x}" y1="0" x2="${x}" y2="${totalHeight}"/>`;
       }
 
       for (const rowInfo of Object.values(layout)) {
@@ -592,8 +869,16 @@
       linksLayer.appendChild(defs);
 
       const anchors = {};
+      const milestones = milestoneItems(items);
+
+      for (const ms of milestones) {
+        const x = xForDate(parseDate(ms.date), minDate);
+        anchors[ms.id] = { start: { x, y: 0 }, end: { x, y: 0 } };
+      }
 
       for (const item of items) {
+        if (item.type === "milestone") continue;
+
         const row = itemRow(item);
         const rowInfo = layout[row];
         const laneHeight = rowInfo.height / rowInfo.laneCount;
@@ -611,28 +896,15 @@
           rect.setAttribute("width", Math.max(x2 - x1, 6));
           rect.setAttribute("height", barHeight);
           if (color) {
-            rect.setAttribute("fill", color);
-            rect.setAttribute("stroke", color);
+            rect.setAttribute("style", `fill: ${color}; stroke: ${color}`);
           }
           bindTooltip(rect, item);
           itemsLayer.appendChild(rect);
-          anchors[item.id] = { start: { x: x1, y: cy }, end: { x: x2, y: cy } };
-        } else if (item.type === "milestone") {
-          const x = xForDate(parseDate(item.date), minDate);
-          const size = markerSize(laneHeight, 12);
-          const diamond = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-          diamond.setAttribute("class", "milestone-shape");
-          diamond.setAttribute(
-            "points",
-            `${x},${cy - size} ${x + size},${cy} ${x},${cy + size} ${x - size},${cy}`
-          );
-          if (color) {
-            diamond.setAttribute("fill", color);
-            diamond.setAttribute("stroke", color);
-          }
-          bindTooltip(diamond, item);
-          itemsLayer.appendChild(diamond);
-          anchors[item.id] = { start: { x, y: cy }, end: { x, y: cy } };
+          anchors[item.id] = {
+            type: "task",
+            start: { x: x1, y: cy },
+            end: { x: x2, y: cy },
+          };
         } else if (item.type === "deliverable") {
           const x = xForDate(parseDate(item.date), minDate);
           const r = markerSize(laneHeight, 9);
@@ -642,35 +914,46 @@
           circle.setAttribute("cy", cy);
           circle.setAttribute("r", r);
           if (color) {
-            circle.setAttribute("fill", color);
-            circle.setAttribute("stroke", color);
+            circle.setAttribute("style", `fill: ${color}; stroke: ${color}`);
           }
           bindTooltip(circle, item);
           itemsLayer.appendChild(circle);
-          anchors[item.id] = { start: { x, y: cy }, end: { x, y: cy } };
+          anchors[item.id] = {
+            type: "deliverable",
+            radius: r,
+            start: { x, y: cy },
+            end: { x, y: cy },
+          };
         }
       }
+
+      const byId = Object.fromEntries(items.map(i => [i.id, i]));
 
       for (const item of items) {
         const target = anchors[item.id];
         if (!target) continue;
+        if (item.type === "milestone") continue;
         for (const predId of item.predecessors || []) {
+          const pred = byId[predId];
+          if (pred?.type === "milestone") continue;
+
           const source = anchors[predId];
           if (!source) continue;
 
-          const x1 = source.end.x;
-          const y1 = source.end.y;
-          const x2 = target.start.x;
-          const y2 = target.start.y;
-          const midX = x1 + Math.max(24, (x2 - x1) * 0.4);
-
-          const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-          path.setAttribute("class", "dependency-line");
-          path.setAttribute(
-            "d",
-            `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`
+          const { x1, y1, x2, y2 } = dependencyEndpoints(
+            source,
+            target,
+            pred,
+            item
           );
-          linksLayer.appendChild(path);
+
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("class", "dependency-line");
+          line.setAttribute("x1", x1);
+          line.setAttribute("y1", y1);
+          line.setAttribute("x2", x2);
+          line.setAttribute("y2", y2);
+          linksLayer.appendChild(line);
         }
       }
 
@@ -682,17 +965,84 @@
       linksLayer.setAttribute("height", height);
     }
 
+    function renderTimeline() {
+      const milestones = milestoneItems(ITEMS);
+      const totalDays = daysBetween(viewBounds.min, viewBounds.max);
+      const width = contentWidth(totalDays);
+      const { layout, totalHeight } = cachedLayout;
+
+      renderAxis(viewBounds.min, viewBounds.max, width, milestones);
+      renderGrid(viewBounds.min, viewBounds.max, layout, totalHeight, width, milestones);
+      renderItems(ITEMS, viewBounds.min, layout);
+    }
+
+    function zoomAt(factor, clientX) {
+      const oldDayWidth = dayWidth;
+      dayWidth = clampDayWidth(dayWidth * factor);
+      if (dayWidth === oldDayWidth) return;
+
+      const scrollEl = chartScroll;
+      const rect = scrollEl.getBoundingClientRect();
+      const anchorX = clientX ?? rect.left + rect.width / 2;
+      const totalDays = daysBetween(viewBounds.min, viewBounds.max);
+      const oldContentWidth = totalDays * oldDayWidth + 40;
+      const contentX = scrollEl.scrollLeft + (anchorX - rect.left);
+      const ratio = oldContentWidth > 0 ? contentX / oldContentWidth : 0;
+
+      updateZoomSlider();
+      renderTimeline();
+
+      const newContentWidth = contentWidth(totalDays);
+      scrollEl.scrollLeft = Math.max(0, ratio * newContentWidth - (anchorX - rect.left));
+      syncScrollFromChart();
+    }
+
+    function fitTimeline() {
+      const totalDays = daysBetween(viewBounds.min, viewBounds.max);
+      const available = Math.max(120, chartScroll.clientWidth - 40);
+      dayWidth = clampDayWidth(available / totalDays);
+      updateZoomSlider();
+      renderTimeline();
+      chartScroll.scrollLeft = 0;
+      syncScrollFromChart();
+    }
+
+    function onWheelZoom(event) {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      zoomAt(event.deltaY < 0 ? 1.12 : 1 / 1.12, event.clientX);
+    }
+
+    chartScroll.addEventListener("wheel", onWheelZoom, { passive: false });
+    timelineScrollX.addEventListener("wheel", onWheelZoom, { passive: false });
+
+    zoomSlider.addEventListener("input", () => {
+      const target = sliderToDayWidth(Number(zoomSlider.value));
+      const factor = target / dayWidth;
+      const rect = chartScroll.getBoundingClientRect();
+      zoomAt(factor, rect.left + rect.width / 2);
+    });
+
+    zoomInBtn.addEventListener("click", () => {
+      const rect = chartScroll.getBoundingClientRect();
+      zoomAt(1.2, rect.left + rect.width / 2);
+    });
+
+    zoomOutBtn.addEventListener("click", () => {
+      const rect = chartScroll.getBoundingClientRect();
+      zoomAt(1 / 1.2, rect.left + rect.width / 2);
+    });
+
+    zoomFitBtn.addEventListener("click", fitTimeline);
+
     function render() {
       const rowable = rowableItems(ITEMS);
-      const { layout, totalHeight } = buildRowLayout(rowable);
-      const { min, max } = computeBounds(ITEMS);
-      const totalDays = daysBetween(min, max);
-      const width = totalDays * DAY_WIDTH + 40;
+      viewBounds = computeBounds(ITEMS);
+      cachedLayout = buildRowLayout(rowable);
 
-      renderLabels(ITEMS, layout);
-      renderAxis(min, max, width);
-      renderGrid(min, max, layout, totalHeight, width);
-      renderItems(ITEMS, min, layout);
+      renderLabels(ITEMS, cachedLayout.layout, cachedLayout.totalHeight);
+      updateZoomSlider();
+      fitTimeline();
     }
 
     render();

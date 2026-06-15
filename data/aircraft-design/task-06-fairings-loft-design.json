@@ -6,6 +6,8 @@
   "start": "2028-08-01",
   "end": "2028-10-28",
   "predecessors": ["flaps-loft-kinematics"],
+  "group": "fairings-loft",
+  "row_label": "Fairings loft",
   "status": "planned",
   "assignee": "Aerodynamics",
   "tags": ["aircraft-design", "task", "loft", "fairings"]

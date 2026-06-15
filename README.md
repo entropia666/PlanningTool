@@ -33,15 +33,9 @@ Each file is one object. Required fields depend on type:
 
 Additional fields (`description`, `assignee`, `status`, `priority`, `tags`, `notes`, `color`, etc.) are shown in the hover tooltip. Any extra keys you add are also displayed.
 
-**Tasks**, **milestones**, and **deliverables** each get their own row by default. To share a row with another item:
+**Milestones** render on the **timeline header** (diamond + label) with a **vertical line** spanning the full chart height. Tasks and deliverables occupy rows below.
 
-- Set the same `"row": 0` (or any index) on each item, or
-- Give them the same `"group": "backend"` string (easier to read in JSON)
-- Set `"anchor": "other-item-id"` to place on another item's row without assigning a row number
-
-Optional `"row_label"` sets the left-column caption when several items share a row (defaults to names joined with ` · `).
-
-**Milestones** automatically share a row with the latest-finishing task that feeds their deliverables (unless `row`, `group`, or `anchor` is set). Use `"anchor": "task-id"` to pin manually.
+To share a row, use the same `"row"`, `"group"`, or `"anchor"` on tasks/deliverables.
 
 If items on the same row overlap in time, the row expands into **subrows** (stacked lanes with light divider lines).
 
@@ -117,16 +111,17 @@ Both tasks appear on one row because they share `"group": "implementation"`.
 
 Copy this when asking an LLM to create planning JSON files:
 
-> Create one JSON file per planning item for a Gantt chart tool. Follow the schema in `schema/planning-item.schema.json`. Use `type`: `task` (with `start` and `end`), `milestone` (with `date`), or `deliverable` (with `date`). Each item needs a unique `id`. Link items with `predecessors` (array of ids). Include rich metadata: `description`, `assignee`, `status`, `priority`, `tags`, `notes`. Dates as `YYYY-MM-DD`. Save files in `data/<project-name>/` with descriptive filenames like `01-kickoff.json`.
+> Create one JSON file per planning item for a Gantt chart tool. Follow the schema in `schema/planning-item.schema.json`. Use `type`: `task` (with `start` and `end`), `milestone` (with `date`), or `deliverable` (with `date`). Each item needs a unique `id`. Link items with `predecessors` (array of ids). Include rich metadata: `description`, `assignee`, `status`, `priority`, `tags`, `notes`. Dates as `YYYY-MM-DD`. Save files in `data/<project-name>/` with type-prefixed filenames like `task-01-flight-loads.json`, `milestone-00-kickoff.json`, or `deliverable-07-primary-structure-external-loft.json`.
 
 ## Chart behaviour
 
 - **Tasks** — horizontal bars, width proportional to duration.
 - **Milestones** — orange diamonds at a point in time.
 - **Deliverables** — green circles at a point in time.
-- **Dependencies** — curved arrows from predecessor end to successor start.
+- **Dependencies** — straight diagonal arrows from predecessor end to successor start.
 - **Tooltips** — hover any item to see all JSON fields.
 - **Scrolling** — vertical scroll for rows; horizontal scroll for the timeline.
+- **Zoom** — use **Ctrl + scroll** (or **⌘ + scroll** on Mac) over the chart to zoom toward the cursor; **+/−**, slider, and **Fit** in the header.
 
 ## CLI options
 

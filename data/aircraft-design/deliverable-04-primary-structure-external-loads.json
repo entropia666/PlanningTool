@@ -4,7 +4,8 @@
   "name": "Primary structure external loads",
   "description": "Joint definition phase deliverable — external loads for primary structure: fuselage, wing, vertical tail, horizontal tail, and pylon.",
   "date": "2028-10-30",
-  "predecessors": ["joint-definition-phase", "flight-loads", "ground-water-loads"],
+  "predecessors": ["flight-loads", "ground-water-loads"],
+  "group": "loads",
   "status": "planned",
   "tags": ["aircraft-design", "deliverable", "joint-definition", "primary-structure", "loads"],
   "components": ["fuselage", "wing", "vertical-tail", "horizontal-tail", "pylon"]

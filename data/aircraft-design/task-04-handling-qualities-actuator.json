@@ -6,6 +6,8 @@
   "start": "2028-04-01",
   "end": "2028-10-15",
   "predecessors": ["preliminary-design-review"],
+  "group": "handling-qualities",
+  "row_label": "Handling qualities / actuator",
   "status": "planned",
   "assignee": "Flight Physics",
   "tags": ["aircraft-design", "task", "handling-qualities", "actuator", "flight-physics"]
