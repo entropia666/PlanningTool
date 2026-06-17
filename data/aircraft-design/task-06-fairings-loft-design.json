@@ -3,12 +3,18 @@
   "type": "task",
   "name": "Fairings and other details loft design",
   "description": "External loft design for fairings, interfaces, and other aerodynamic details.",
-  "start": "2028-08-01",
-  "end": "2028-10-28",
-  "predecessors": ["flaps-loft-kinematics"],
+  "start": "2028-07-02",
+  "end": "2028-10-13",
+  "predecessors": [],
   "group": "fairings-loft",
   "row_label": "Fairings loft",
   "status": "planned",
   "assignee": "Aerodynamics",
-  "tags": ["aircraft-design", "task", "loft", "fairings"]
+  "tags": [
+    "aircraft-design",
+    "task",
+    "loft",
+    "fairings"
+  ],
+  "row": 4
 }

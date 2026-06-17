@@ -3,9 +3,15 @@
   "type": "deliverable",
   "name": "Planform freeze",
   "description": "Concept review deliverable — frozen wing and empennage planform geometry.",
-  "date": "2027-04-30",
+  "date": "2027-05-16",
   "predecessors": [],
   "group": "planform",
   "status": "planned",
-  "tags": ["aircraft-design", "deliverable", "concept-review", "planform", "configuration"]
+  "tags": [
+    "aircraft-design",
+    "deliverable",
+    "concept-review",
+    "planform",
+    "configuration"
+  ]
 }

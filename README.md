@@ -4,19 +4,39 @@ Generate a scrollable Gantt-style planning view from JSON files describing tasks
 
 ## Quick start
 
+### Static HTML export
+
 ```bash
-python generate_plan.py data/example -o output/plan.html -t "My Project"
+python generate_plan.py data/aircraft-design -o output/aircraft-design.html -t "Aircraft Design"
 ```
 
-Open `output/plan.html` in a browser.
+Open `output/aircraft-design.html` in a browser.
 
-## Workflow
+### Interactive web editor
 
-1. **Create JSON files** — one file per planning item in a folder (e.g. `data/my-project/`).
-2. **Generate HTML** — run `generate_plan.py` pointing at that folder.
-3. **View** — open the output HTML file; scroll vertically through rows and horizontally through time.
+Install dependencies (first time only):
 
-Use Cursor (or any LLM) to draft JSON files. Point it at `schema/planning-item.schema.json` and the examples in `data/example/`.
+```bash
+pip install -r requirements.txt
+```
+
+Start the local editor:
+
+```bash
+python -m app
+```
+
+Open [http://localhost:8000](http://localhost:8000). Options: `--port 8000`, `--plan aircraft-design`, `--host 127.0.0.1`.
+
+## Dual workflow (web + Cursor)
+
+Both the web app and `generate_plan.py` read the same JSON files under `data/<plan>/` (one file per item). The disk is the source of truth — there is no database.
+
+1. **Edit in the browser** — drag task bars to move or resize (snaps to whole days, pushes dependent items forward), click any item to edit JSON in the side panel, right-click empty chart area to create a new task (14-day default duration).
+2. **Edit in Cursor** — change any `data/aircraft-design/*.json` file directly; the web app polls every 3 seconds and reloads (or prompts if you have unsaved panel edits).
+3. **Static export** — `python generate_plan.py` still produces a read-only HTML file using `templates/gantt.html`.
+
+New tasks are saved immediately as `task-NN-slug.json`. Dragging a task earlier than its predecessors allows is clamped to the day after the latest predecessor ends.
 
 ## JSON format
 
@@ -139,12 +159,17 @@ python generate_plan.py [data_dir] [-o OUTPUT] [-t TITLE] [--template PATH]
 ## Project layout
 
 ```
-PlanningTool/
-  generate_plan.py       # JSON → HTML generator
-  templates/gantt.html   # Self-contained chart template
-  schema/                # JSON schema for LLM validation
-  data/example/          # Sample planning items
-  output/plan.html       # Generated view (after running script)
+Aircraft_Planning/
+  generate_plan.py         # JSON → static HTML (uses plan_logic)
+  plan_logic.py            # Shared load, validate, assign_rows, cascade
+  app/                     # Interactive web editor (python -m app)
+  templates/
+    gantt.html             # Read-only chart template
+    gantt-editor.html      # Interactive editor page
+  schema/                  # JSON schema for validation
+  data/aircraft-design/    # Planning items (one JSON file each)
+  output/                  # Generated static HTML
+  requirements.txt         # fastapi, uvicorn, jsonschema
 ```
 
-No external dependencies — Python 3.9+ standard library only.
+Static export uses Python 3.9+ stdlib only. The web editor requires `pip install -r requirements.txt`.

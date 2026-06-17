@@ -3,10 +3,18 @@
   "type": "deliverable",
   "name": "Wind tunnel validated aero data",
   "description": "Preliminary design review deliverable — wind tunnel validated aerodynamic data, due three months before PDR.",
-  "date": "2028-04-30",
-  "predecessors": ["wind-tunnel-model-test-analysis"],
+  "date": "2028-05-17",
+  "predecessors": [
+    "wind-tunnel-model-test-analysis"
+  ],
   "anchor": "wind-tunnel-model-test-analysis",
   "group": "aerodynamics",
   "status": "planned",
-  "tags": ["aircraft-design", "deliverable", "preliminary-design", "aerodynamics", "wind-tunnel"]
+  "tags": [
+    "aircraft-design",
+    "deliverable",
+    "preliminary-design",
+    "aerodynamics",
+    "wind-tunnel"
+  ]
 }

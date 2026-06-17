@@ -1,0 +1,23 @@
+{
+  "id": "validate-cl415-performance",
+  "type": "task",
+  "name": "Validate CL 415 performance",
+  "description": "Validate CL-415 reference aircraft mission and flight performance ahead of concept review.",
+  "start": "2027-04-07",
+  "end": "2027-05-14",
+  "predecessors": [
+    "CL 415 Aero data creation"
+  ],
+  "group": "mission-performance",
+  "row_label": "Mission performance",
+  "status": "planned",
+  "assignee": "Flight Physics",
+  "tags": [
+    "aircraft-design",
+    "task",
+    "mission-performance",
+    "performance",
+    "CL-415",
+    "flight-physics"
+  ]
+}

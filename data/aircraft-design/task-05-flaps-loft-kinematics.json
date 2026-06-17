@@ -3,12 +3,18 @@
   "type": "task",
   "name": "Flaps loft and kinematics design",
   "description": "External loft and kinematic design for flaps and control surfaces.",
-  "start": "2028-07-01",
-  "end": "2028-10-25",
+  "start": "2028-06-19",
+  "end": "2028-10-13",
   "predecessors": [],
   "group": "flaps-loft-kinematics",
   "row_label": "Flaps loft & kinematics",
   "status": "planned",
   "assignee": "Aerodynamics / Structures",
-  "tags": ["aircraft-design", "task", "loft", "kinematics", "flaps"]
+  "tags": [
+    "aircraft-design",
+    "task",
+    "loft",
+    "kinematics",
+    "flaps"
+  ]
 }

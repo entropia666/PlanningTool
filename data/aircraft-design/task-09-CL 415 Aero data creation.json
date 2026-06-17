@@ -1,0 +1,21 @@
+{
+  "id": "CL 415 Aero data creation",
+  "type": "task",
+  "name": "CL 415 Aero data creation",
+  "description": "Create aerodynamic data for the CL 415 aircraft.",
+  "start": "2027-01-31",
+  "end": "2027-03-31",
+  "predecessors": [
+    "gather-cl415-engineering-info"
+  ],
+  "group": "aerodynamics",
+  "row_label": "Aerodynamics",
+  "status": "planned",
+  "assignee": "Flight Physics",
+  "tags": [
+    "aircraft-design",
+    "CL 415",
+    "flight-physics"
+  ],
+  "row": 10
+}

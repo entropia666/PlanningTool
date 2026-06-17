@@ -1,0 +1,13 @@
+{
+  "id": "gather-cl415-engineering-info",
+  "type": "task",
+  "name": "Gather CL 415 engineering information (AFM, simulator session, geometry etc)",
+  "description": "Collect reference data for CL-415 reverse engineering — AFM, simulator session outputs, geometry (3d scan for example), and related engineering documentation.",
+  "start": "2026-10-01",
+  "end": "2027-01-31",
+  "predecessors": ["kickoff"],
+  "group": "reference-aircraft",
+  "row_label": "CL 415 reverse engineering",
+  "status": "planned",
+  "tags": ["aircraft-design", "task", "reference-aircraft", "reverse-engineering", "CL-415"]
+}

@@ -1,11 +1,20 @@
 {
   "id": "reverse-engineer-cl415",
   "type": "deliverable",
-  "name": "Reverse engineer of CL 415",
-  "description": "Concept review deliverable — reverse engineering of the CL-415 reference aircraft.",
-  "date": "2027-04-30",
-  "predecessors": [],
+  "name": "Validate engineering methods on CL-415 reverse engineering",
+  "description": "Validate engineering methods with CL415 reverse engineering: estimated handling qualities, performance should match with Aircraft flight manual, simulator etc",
+  "date": "2027-05-16",
+  "predecessors": [
+    "gather-cl415-engineering-info"
+  ],
+  "anchor": "gather-cl415-engineering-info",
   "group": "reference-aircraft",
   "status": "planned",
-  "tags": ["aircraft-design", "deliverable", "concept-review", "reverse-engineering", "CL-415"]
+  "tags": [
+    "aircraft-design",
+    "deliverable",
+    "concept-review",
+    "reverse-engineering",
+    "CL-415"
+  ]
 }

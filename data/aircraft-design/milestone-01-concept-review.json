@@ -3,8 +3,15 @@
   "type": "milestone",
   "name": "Concept Review",
   "description": "Overall aircraft design — concept review gate.",
-  "date": "2027-04-30",
-  "predecessors": ["kickoff"],
+  "date": "2027-05-16",
+  "predecessors": [
+    "validate-cl415-handling-qualities",
+    "validate-cl415-performance"
+  ],
   "status": "planned",
-  "tags": ["aircraft-design", "milestone", "concept"]
+  "tags": [
+    "aircraft-design",
+    "milestone",
+    "concept"
+  ]
 }

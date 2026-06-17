@@ -3,12 +3,18 @@
   "type": "task",
   "name": "Handling qualities manoeuvre for actuator sizing",
   "description": "Handling qualities manoeuvres and control authority assessment to drive actuator force and stroke requirements.",
-  "start": "2028-04-01",
-  "end": "2028-10-15",
+  "start": "2028-07-20",
+  "end": "2028-10-18",
   "predecessors": [],
   "group": "handling-qualities",
   "row_label": "Handling qualities / actuator",
   "status": "planned",
   "assignee": "Flight Physics",
-  "tags": ["aircraft-design", "task", "handling-qualities", "actuator", "flight-physics"]
+  "tags": [
+    "aircraft-design",
+    "task",
+    "handling-qualities",
+    "actuator",
+    "flight-physics"
+  ]
 }

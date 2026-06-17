@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{TITLE}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/theme/elegant.min.css">
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --border: #d8dee6;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --task: #3b82f6;
+      --task-border: #2563eb;
+      --milestone: #f59e0b;
+      --deliverable: #10b981;
+      --grid: #e5e7eb;
+      --arrow: #64748b;
+      --label-width: 220px;
+      --row-height: 48px;
+      --header-height: 72px;
+      --editor-width: 380px;
+      --accent: #2563eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 16px 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    header h1 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+
+    header .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .zoom-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8125rem;
+      color: var(--muted);
+    }
+
+    .zoom-controls button {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0;
+    }
+
+    .zoom-controls button:hover { background: #f8fafc; border-color: #cbd5e1; }
+    .zoom-controls input[type="range"] { width: 120px; accent-color: var(--task); cursor: pointer; }
+    .zoom-hint { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-bar { width: 24px; height: 10px; border-radius: 4px; background: var(--task); }
+    .legend-diamond { width: 10px; height: 10px; background: var(--milestone); transform: rotate(45deg); }
+    .legend-circle { width: 10px; height: 10px; border-radius: 50%; background: var(--deliverable); }
+
+    .sync-status {
+      font-size: 0.75rem;
+      color: var(--muted);
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #f1f5f9;
+    }
+
+    .sync-status.warn { background: #fef3c7; color: #92400e; }
+
+    .main-layout {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .chart-area {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      padding-right: 8px;
+    }
+
+    .chart-shell {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .timeline-header {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: #fafbfc;
+      flex-shrink: 0;
+    }
+
+    .label-corner {
+      width: var(--label-width);
+      min-width: var(--label-width);
+      border-right: 1px solid var(--border);
+      height: var(--header-height);
+      display: flex;
+      align-items: flex-end;
+      padding: 0 12px 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .timeline-axis { height: var(--header-height); position: relative; }
+    .axis-label {
+      position: absolute;
+      top: 6px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .milestone-marker {
+      position: absolute;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      z-index: 2;
+      max-width: 120px;
+    }
+
+    .milestone-marker-diamond {
+      width: 12px;
+      height: 12px;
+      background: var(--milestone);
+      border: 1.5px solid #d97706;
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    .milestone-marker-label {
+      font-size: 0.68rem;
+      line-height: 1.2;
+      color: #92400e;
+      text-align: center;
+      font-weight: 600;
+      white-space: normal;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .milestone-marker.selected .milestone-marker-diamond {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .timeline-scroll-x { overflow-x: auto; flex: 1; }
+    .milestone-marker:hover .milestone-marker-diamond { filter: brightness(1.08); }
+    .milestone-line { stroke: var(--milestone); stroke-width: 2; opacity: 0.55; pointer-events: none; }
+
+    .chart-body { display: flex; flex: 1; min-height: 0; }
+
+    .labels-column {
+      width: var(--label-width);
+      min-width: var(--label-width);
+      border-right: 1px solid var(--border);
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex-shrink: 0;
+      scrollbar-width: thin;
+    }
+
+    .labels-column::-webkit-scrollbar { height: 6px; width: 6px; }
+    .labels-column::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+    .labels-inner { min-width: 100%; width: max-content; }
+
+    .label-row {
+      min-height: var(--row-height);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--grid);
+      font-size: 0.875rem;
+      white-space: nowrap;
+      cursor: default;
+    }
+
+    .label-row:hover { background: #f8fafc; }
+    .subrow-line { stroke: #eef1f5; stroke-width: 1; }
+
+    .chart-scroll { overflow: auto; flex: 1; }
+    .chart-canvas { position: relative; }
+
+    .grid-layer, .links-layer, .items-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .grid-line { stroke: var(--grid); stroke-width: 1; }
+
+    .task-bar {
+      fill: var(--task);
+      stroke: var(--task-border);
+      stroke-width: 1;
+      rx: 4;
+      cursor: grab;
+    }
+
+    .task-bar:hover { filter: brightness(1.08); }
+    .task-bar.selected { stroke: var(--accent); stroke-width: 2; }
+    .task-bar.dragging { cursor: grabbing; opacity: 0.85; }
+
+    .resize-handle {
+      fill: transparent;
+      cursor: ew-resize;
+    }
+
+    .resize-handle:hover { fill: rgba(255, 255, 255, 0.35); }
+
+    .deliverable-shape {
+      fill: var(--deliverable);
+      stroke: #059669;
+      stroke-width: 1.5;
+      cursor: grab;
+    }
+
+    .deliverable-shape.dragging { cursor: grabbing; opacity: 0.85; }
+
+    .deliverable-shape:hover { filter: brightness(1.08); }
+    .deliverable-shape.selected { stroke: var(--accent); stroke-width: 2.5; }
+
+    .dependency-line {
+      fill: none;
+      stroke: var(--arrow);
+      stroke-width: 1.5;
+      marker-end: url(#arrowhead);
+      pointer-events: none;
+    }
+
+    #tooltip {
+      position: fixed;
+      z-index: 1000;
+      max-width: 360px;
+      background: #111827;
+      color: #f9fafb;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    #tooltip.visible { opacity: 1; }
+    #tooltip h3 { margin: 0 0 8px; font-size: 0.95rem; font-weight: 600; }
+    #tooltip dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; }
+    #tooltip dt { color: #9ca3af; font-weight: 500; }
+    #tooltip dd { margin: 0; word-break: break-word; }
+    #tooltip.label-tip h3 { margin: 0; }
+    #tooltip.label-tip dl { display: none; }
+
+    /* Editor panel */
+    .editor-panel {
+      width: var(--editor-width);
+      min-width: var(--editor-width);
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .editor-panel.hidden { display: none; }
+
+    .editor-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .editor-header h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .editor-close {
+      border: none;
+      background: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 0 4px;
+      line-height: 1;
+    }
+
+    .editor-close:hover { color: var(--text); }
+
+    .editor-meta {
+      padding: 0 16px 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .editor-codemirror-wrap {
+      flex: 1;
+      margin: 0 16px;
+      min-height: 200px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editor-codemirror-wrap .CodeMirror {
+      flex: 1;
+      height: auto !important;
+      font-family: "Cascadia Code", "Consolas", "Monaco", monospace;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+    }
+
+    .editor-codemirror-wrap .CodeMirror-focused {
+      outline: none;
+    }
+
+    .editor-codemirror-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    .editor-error {
+      margin: 8px 16px 0;
+      padding: 8px 10px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 6px;
+      color: #b91c1c;
+      font-size: 0.8125rem;
+      display: none;
+    }
+
+    .editor-error.visible { display: block; }
+
+    .editor-actions {
+      padding: 12px 16px;
+      display: flex;
+      gap: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .editor-actions button {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .editor-actions button.primary {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .editor-actions button:hover { filter: brightness(0.97); }
+    .editor-status {
+      flex: 1;
+      font-size: 0.8125rem;
+      color: var(--muted);
+      align-self: center;
+    }
+
+    .editor-status.error { color: #b91c1c; }
+
+    /* Context menu */
+    #context-menu {
+      position: fixed;
+      z-index: 2000;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      padding: 4px 0;
+      min-width: 160px;
+      display: none;
+    }
+
+    #context-menu.visible { display: block; }
+
+    #context-menu button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    #context-menu button:hover { background: #f1f5f9; }
+
+    #context-menu button.danger { color: #b91c1c; }
+    #context-menu button.danger:hover { background: #fef2f2; }
+
+    #context-menu .ctx-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
+
+    .ctx-section.hidden { display: none; }
+
+    /* Disk change banner */
+    #disk-banner {
+      display: none;
+      padding: 8px 16px;
+      background: #fef3c7;
+      border-bottom: 1px solid #fcd34d;
+      font-size: 0.8125rem;
+      color: #92400e;
+      align-items: center;
+      gap: 12px;
+    }
+
+    #disk-banner.visible { display: flex; }
+
+    #disk-banner button {
+      padding: 4px 12px;
+      border-radius: 4px;
+      border: 1px solid #d97706;
+      background: white;
+      cursor: pointer;
+      font-size: 0.8125rem;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      font-size: 1rem;
+      color: var(--muted);
+    }
+
+    .loading-overlay.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{TITLE}}</h1>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-bar"></span> Task</span>
+      <span class="legend-item"><span class="legend-diamond"></span> Milestone</span>
+      <span class="legend-item"><span class="legend-circle"></span> Deliverable</span>
+      <span class="zoom-hint">Ctrl + scroll to zoom · Right-click chart for new task</span>
+    </div>
+    <span class="sync-status" id="sync-status">Loading…</span>
+    <div class="zoom-controls">
+      <button id="zoom-out" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+      <input id="zoom-slider" type="range" min="0" max="100" value="50" aria-label="Timeline zoom">
+      <button id="zoom-in" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+      <button id="zoom-fit" type="button" title="Fit timeline to view">Fit</button>
+    </div>
+  </header>
+
+  <div id="disk-banner">
+    <span id="disk-banner-text">A file changed on disk.</span>
+    <button type="button" id="disk-reload-btn">Reload</button>
+    <button type="button" id="disk-dismiss-btn">Dismiss</button>
+  </div>
+
+  <div class="main-layout">
+    <div class="chart-area">
+      <div class="chart-shell">
+        <div class="timeline-header">
+          <div class="label-corner">Milestones</div>
+          <div class="timeline-scroll-x" id="timeline-scroll-x">
+            <div class="timeline-axis" id="timeline-axis"></div>
+          </div>
+        </div>
+        <div class="chart-body">
+          <div class="labels-column" id="labels-column"></div>
+          <div class="chart-scroll" id="chart-scroll">
+            <div class="chart-canvas" id="chart-canvas">
+              <svg class="grid-layer" id="grid-layer"></svg>
+              <svg class="links-layer" id="links-layer"></svg>
+              <svg class="items-layer" id="items-layer"></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="editor-panel hidden" id="editor-panel">
+      <div class="editor-header">
+        <h2 id="editor-title">Edit item</h2>
+        <button class="editor-close" id="editor-close" type="button" title="Close" aria-label="Close">×</button>
+      </div>
+      <div class="editor-meta" id="editor-meta"></div>
+      <div class="editor-codemirror-wrap" id="editor-codemirror-wrap">
+        <textarea id="json-editor" spellcheck="false"></textarea>
+      </div>
+      <div class="editor-error" id="editor-error"></div>
+      <div class="editor-actions">
+        <span class="editor-status" id="editor-status"></span>
+        <button type="button" id="editor-revert">Revert</button>
+      </div>
+    </aside>
+  </div>
+
+  <div id="context-menu">
+    <div class="ctx-section hidden" id="ctx-item-section">
+      <button type="button" id="ctx-edit">Edit JSON</button>
+      <button type="button" id="ctx-delete" class="danger">Delete</button>
+    </div>
+    <div class="ctx-section" id="ctx-chart-section">
+      <button type="button" id="ctx-new-task">New task here</button>
+    </div>
+  </div>
+
+  <div id="tooltip" role="tooltip"></div>
+  <div class="loading-overlay" id="loading">Loading plan…</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/mode/javascript/javascript.min.js"></script>
+
+  <script>
+    const PLAN = "{{DEFAULT_PLAN}}";
+    const API = `/api/plans/${PLAN}`;
+    const INTERNAL_KEYS = new Set(["_source_file", "_auto_row", "_mtime"]);
+    const SYNC_INTERVAL_MS = 3000;
+    const NEW_TASK_DURATION_DAYS = 14;
+
+    let ITEMS = [];
+    const ROW_HEIGHT = 48;
+    const MIN_LANE_HEIGHT = 24;
+    const BASE_DAY_WIDTH = 3.6;
+    const MIN_DAY_WIDTH = 0.35;
+    const MAX_DAY_WIDTH = 22;
+    const PADDING_DAYS = 3;
+    const HANDLE_WIDTH = 6;
+    const SUBROW_PROXIMITY_DAYS = 30;
+    const MILESTONE_SNAP_DAYS = 10;
+    const MS_PER_DAY = 86400000;
+
+    let dayWidth = BASE_DAY_WIDTH;
+    let viewBounds = null;
+    let cachedLayout = null;
+    let totalDaysWide = 0;
+    let selectedId = null;
+    let editorDirty = false;
+    let fileMtimes = {};
+    let diskChangePending = false;
+    let initialFitDone = false;
+
+    const tooltip = document.getElementById("tooltip");
+    const chartScroll = document.getElementById("chart-scroll");
+    const timelineScrollX = document.getElementById("timeline-scroll-x");
+    const labelsColumn = document.getElementById("labels-column");
+    const chartCanvas = document.getElementById("chart-canvas");
+    const gridLayer = document.getElementById("grid-layer");
+    const linksLayer = document.getElementById("links-layer");
+    const itemsLayer = document.getElementById("items-layer");
+    const timelineAxis = document.getElementById("timeline-axis");
+    const zoomSlider = document.getElementById("zoom-slider");
+    const zoomInBtn = document.getElementById("zoom-in");
+    const zoomOutBtn = document.getElementById("zoom-out");
+    const zoomFitBtn = document.getElementById("zoom-fit");
+    const editorPanel = document.getElementById("editor-panel");
+    const editorTitle = document.getElementById("editor-title");
+    const editorMeta = document.getElementById("editor-meta");
+    const jsonEditor = document.getElementById("json-editor");
+    const editorError = document.getElementById("editor-error");
+    const editorStatus = document.getElementById("editor-status");
+    const contextMenu = document.getElementById("context-menu");
+    const ctxItemSection = document.getElementById("ctx-item-section");
+    const ctxChartSection = document.getElementById("ctx-chart-section");
+    const syncStatus = document.getElementById("sync-status");
+    const diskBanner = document.getElementById("disk-banner");
+    const loadingOverlay = document.getElementById("loading");
+
+    let ctxClickPos = null;
+    let ctxTargetId = null;
+    let cmEditor = null;
+    let editorSaveTimer = null;
+    let editorSaving = false;
+    let editorLoading = false;
+    const AUTO_SAVE_DELAY_MS = 600;
+    const DRAG_THRESHOLD_PX = 4;
+
+    // --- CodeMirror editor ---
+
+    function initCodeEditor() {
+      cmEditor = CodeMirror.fromTextArea(jsonEditor, {
+        mode: { name: "javascript", json: true },
+        theme: "elegant",
+        lineNumbers: true,
+        lineWrapping: true,
+        indentUnit: 2,
+        tabSize: 2,
+      });
+      cmEditor.on("change", () => {
+        if (editorLoading) return;
+        scheduleAutoSave();
+      });
+    }
+
+    function updateEditorStatus(text, kind) {
+      editorStatus.textContent = text;
+      editorStatus.classList.toggle("error", kind === "error");
+    }
+
+    function setEditorText(text) {
+      editorLoading = true;
+      if (cmEditor) cmEditor.setValue(text);
+      else jsonEditor.value = text;
+      editorLoading = false;
+    }
+
+    function getEditorText() {
+      return cmEditor ? cmEditor.getValue() : jsonEditor.value;
+    }
+
+    function scheduleAutoSave() {
+      if (!selectedId || editorLoading) return;
+      editorDirty = true;
+      hideEditorError();
+      updateEditorStatus("Unsaved changes");
+      clearTimeout(editorSaveTimer);
+      editorSaveTimer = setTimeout(() => saveEditor(), AUTO_SAVE_DELAY_MS);
+    }
+
+    async function saveEditor() {
+      if (!selectedId || editorSaving || editorLoading) return false;
+      clearTimeout(editorSaveTimer);
+
+      let parsed;
+      try {
+        parsed = JSON.parse(getEditorText());
+      } catch (e) {
+        showEditorError(`Invalid JSON: ${e.message}`);
+        updateEditorStatus("Invalid JSON", "error");
+        return false;
+      }
+      if (parsed.id !== selectedId) {
+        showEditorError("Cannot change item id. Create a new file in Cursor instead.");
+        updateEditorStatus("Cannot change id", "error");
+        return false;
+      }
+
+      const current = ITEMS.find(i => i.id === selectedId);
+      if (current && getEditorText() === itemToEditorJson(current)) {
+        editorDirty = false;
+        hideEditorError();
+        updateEditorStatus("Saved");
+        return true;
+      }
+
+      editorSaving = true;
+      updateEditorStatus("Saving…");
+      try {
+        const saved = await apiSend("PUT", `${API}/items/${selectedId}`, parsed);
+        mergeItem(saved);
+        editorDirty = false;
+        hideEditorError();
+        editorTitle.textContent = saved.name || saved.id;
+        editorMeta.textContent = saved._source_file ? `File: ${saved._source_file}` : "";
+        setEditorText(itemToEditorJson(saved));
+        updateMtimesFromItems();
+        render();
+        updateEditorStatus("Saved");
+        syncStatus.textContent = "In sync";
+        return true;
+      } catch (e) {
+        showEditorError(e.message);
+        updateEditorStatus("Save failed", "error");
+        return false;
+      } finally {
+        editorSaving = false;
+      }
+    }
+
+    async function flushAutoSave() {
+      clearTimeout(editorSaveTimer);
+      if (!editorDirty) return true;
+      return saveEditor();
+    }
+
+    function refreshCodeEditor() {
+      if (!cmEditor) return;
+      cmEditor.refresh();
+      const wrap = document.getElementById("editor-codemirror-wrap");
+      if (wrap) cmEditor.setSize(null, Math.max(200, wrap.clientHeight));
+    }
+
+    // --- API ---
+
+    async function apiGet(path) {
+      const res = await fetch(path);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || res.statusText);
+      }
+      return res.json();
+    }
+
+    async function apiSend(method, path, body) {
+      const opts = { method, headers: {} };
+      if (body !== undefined) {
+        opts.headers["Content-Type"] = "application/json";
+        opts.body = JSON.stringify(body);
+      }
+      const res = await fetch(path, opts);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const detail = typeof err.detail === "string" ? err.detail : JSON.stringify(err.detail);
+        throw new Error(detail || res.statusText);
+      }
+      return res.json();
+    }
+
+    async function loadItems() {
+      ITEMS = await apiGet(`${API}/items`);
+      updateMtimesFromItems();
+      return ITEMS;
+    }
+
+    function updateMtimesFromItems() {
+      fileMtimes = {};
+      for (const item of ITEMS) {
+        if (item._mtime != null) fileMtimes[item.id] = item._mtime;
+      }
+    }
+
+    // --- Date helpers ---
+
+    function parseDate(str) {
+      const [y, m, d] = str.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function daysBetween(a, b) {
+      return Math.round((b - a) / 86400000);
+    }
+
+    function addDays(d, n) {
+      const r = new Date(d);
+      r.setDate(r.getDate() + n);
+      return r;
+    }
+
+    function itemStart(item) {
+      if (item.type === "task") return parseDate(item.start);
+      return parseDate(item.date);
+    }
+
+    function itemEnd(item) {
+      if (item.type === "task") return parseDate(item.end);
+      return parseDate(item.date);
+    }
+
+    function formatDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function stripInternal(item) {
+      const out = {};
+      for (const [k, v] of Object.entries(item)) {
+        if (!INTERNAL_KEYS.has(k) && !k.startsWith("_")) out[k] = v;
+      }
+      return out;
+    }
+
+    function itemToEditorJson(item) {
+      return JSON.stringify(stripInternal(item), null, 2);
+    }
+
+    // --- Scroll sync ---
+
+    let syncingScroll = false;
+    function syncScrollFromChart() {
+      if (syncingScroll) return;
+      syncingScroll = true;
+      timelineScrollX.scrollLeft = chartScroll.scrollLeft;
+      labelsColumn.scrollTop = chartScroll.scrollTop;
+      syncingScroll = false;
+    }
+    function syncScrollFromTimeline() {
+      if (syncingScroll) return;
+      syncingScroll = true;
+      chartScroll.scrollLeft = timelineScrollX.scrollLeft;
+      syncingScroll = false;
+    }
+    function syncScrollFromLabels() {
+      if (syncingScroll) return;
+      syncingScroll = true;
+      chartScroll.scrollTop = labelsColumn.scrollTop;
+      syncingScroll = false;
+    }
+
+    chartScroll.addEventListener("scroll", syncScrollFromChart);
+    timelineScrollX.addEventListener("scroll", syncScrollFromTimeline);
+    labelsColumn.addEventListener("scroll", syncScrollFromLabels);
+
+    // --- Bounds & layout (unchanged from static gantt) ---
+
+    function computeBounds(items) {
+      let min = null, max = null;
+      for (const item of items) {
+        const start = itemStart(item);
+        const end = itemEnd(item);
+        if (!min || start < min) min = start;
+        if (!max || end > max) max = end;
+      }
+      min = addDays(min, -PADDING_DAYS);
+      max = addDays(max, PADDING_DAYS);
+      return { min, max };
+    }
+
+    function xForDate(date, minDate) {
+      return daysBetween(minDate, date) * dayWidth;
+    }
+
+    function dateForX(x, minDate) {
+      const days = Math.round(x / dayWidth);
+      return addDays(minDate, days);
+    }
+
+    function contentWidth(totalDays) {
+      return totalDays * dayWidth + 40;
+    }
+
+    function clampDayWidth(value) {
+      return Math.min(MAX_DAY_WIDTH, Math.max(MIN_DAY_WIDTH, value));
+    }
+
+    function dayWidthToSlider(value) {
+      const minLog = Math.log(MIN_DAY_WIDTH);
+      const maxLog = Math.log(MAX_DAY_WIDTH);
+      return Math.round(((Math.log(value) - minLog) / (maxLog - minLog)) * 100);
+    }
+
+    function sliderToDayWidth(value) {
+      const minLog = Math.log(MIN_DAY_WIDTH);
+      const maxLog = Math.log(MAX_DAY_WIDTH);
+      return clampDayWidth(Math.exp(minLog + (value / 100) * (maxLog - minLog)));
+    }
+
+    function updateZoomSlider() {
+      zoomSlider.value = String(dayWidthToSlider(dayWidth));
+    }
+
+    function timelineStep() {
+      const weekPx = 7 * dayWidth;
+      if (weekPx >= 56) return 7;
+      if (weekPx >= 28) return 14;
+      if (30 * dayWidth >= 48) return 30;
+      if (90 * dayWidth >= 48) return 90;
+      return Math.max(1, Math.round(40 / dayWidth));
+    }
+
+    function formatAxisDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      return totalDaysWide > 365 ? `${y}-${m}` : formatDate(d);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function formatFieldName(key) {
+      return key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function formatFieldValue(value) {
+      if (Array.isArray(value)) return value.join(", ");
+      if (typeof value === "object" && value !== null) return JSON.stringify(value);
+      return String(value);
+    }
+
+    // --- Tooltip ---
+
+    function showTooltip(item, event) {
+      if (dragState) return;
+      const rows = Object.entries(item)
+        .filter(([key]) => !key.startsWith("_"))
+        .map(([key, value]) =>
+          `<dt>${formatFieldName(key)}</dt><dd>${formatFieldValue(value)}</dd>`
+        ).join("");
+      tooltip.innerHTML = `<h3>${escapeHtml(item.name)}</h3><dl>${rows}</dl>`;
+      tooltip.classList.add("visible");
+      moveTooltip(event);
+    }
+
+    function moveTooltip(event) {
+      const pad = 14;
+      let x = event.clientX + pad;
+      let y = event.clientY + pad;
+      const rect = tooltip.getBoundingClientRect();
+      if (x + rect.width > window.innerWidth - 8) x = event.clientX - rect.width - pad;
+      if (y + rect.height > window.innerHeight - 8) y = event.clientY - rect.height - pad;
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
+    }
+
+    function hideTooltip() {
+      tooltip.classList.remove("visible");
+      tooltip.classList.remove("label-tip");
+    }
+
+    function bindTooltip(el, item) {
+      el.addEventListener("mouseenter", e => showTooltip(item, e));
+      el.addEventListener("mousemove", moveTooltip);
+      el.addEventListener("mouseleave", hideTooltip);
+    }
+
+    function bindLabelTooltip(el, text) {
+      el.addEventListener("mouseenter", e => {
+        tooltip.innerHTML = `<h3>${escapeHtml(text)}</h3>`;
+        tooltip.classList.add("label-tip", "visible");
+        moveTooltip(e);
+      });
+      el.addEventListener("mousemove", moveTooltip);
+      el.addEventListener("mouseleave", hideTooltip);
+    }
+
+    // --- Row layout ---
+
+    function rowableItems(items) {
+      return items.filter(item => item.type === "task" || item.type === "deliverable");
+    }
+
+    function milestoneItems(items) {
+      return items.filter(item => item.type === "milestone");
+    }
+
+    function itemRow(item) { return item.row ?? 0; }
+
+    function itemsOnRow(row, rowable) {
+      return rowable.filter(item => item.row === row);
+    }
+
+    function itemTimeRange(item) {
+      if (item.type === "task") {
+        return { start: parseDate(item.start).getTime(), end: parseDate(item.end).getTime() };
+      }
+      const t = parseDate(item.date).getTime();
+      return { start: t, end: t };
+    }
+
+    function rangesOverlap(a, b) {
+      return a.start <= b.end && b.start <= a.end;
+    }
+
+    function rangesConflict(rangeA, typeA, rangeB, typeB) {
+      if (typeA === "deliverable" && typeB === "deliverable") {
+        const centerA = (rangeA.start + rangeA.end) / 2;
+        const centerB = (rangeB.start + rangeB.end) / 2;
+        return Math.abs(centerA - centerB) < SUBROW_PROXIMITY_DAYS * MS_PER_DAY;
+      }
+      return rangesOverlap(rangeA, rangeB);
+    }
+
+    function assignSubrows(itemsOnRow) {
+      const sorted = [...itemsOnRow].sort((a, b) => {
+        const ta = itemTimeRange(a), tb = itemTimeRange(b);
+        return ta.start - tb.start || ta.end - tb.end || a.id.localeCompare(b.id);
+      });
+      const lanes = [];
+      const subrows = new Map();
+
+      function placeInLane(item, lane) {
+        while (lanes.length <= lane) lanes.push([]);
+        lanes[lane].push({ range: itemTimeRange(item), type: item.type });
+        subrows.set(item.id, lane);
+      }
+
+      for (const item of sorted) {
+        const anchorId = item.anchor;
+        if (anchorId && subrows.has(anchorId)) {
+          placeInLane(item, subrows.get(anchorId));
+          continue;
+        }
+        const range = itemTimeRange(item);
+        let lane = lanes.findIndex(
+          existing => !existing.some(
+            entry => rangesConflict(range, item.type, entry.range, entry.type)
+          )
+        );
+        if (lane === -1) lane = lanes.length;
+        placeInLane(item, lane);
+      }
+
+      for (const item of sorted) {
+        if (subrows.has(item.id)) continue;
+        const anchorId = item.anchor;
+        if (anchorId && subrows.has(anchorId)) placeInLane(item, subrows.get(anchorId));
+      }
+
+      return { subrows, laneCount: Math.max(lanes.length, 1) };
+    }
+
+    function uniqueRows(rowable) {
+      return [...new Set(rowable.map(item => item.row))].sort((a, b) => a - b);
+    }
+
+    function buildRowLayout(rowable) {
+      const rows = uniqueRows(rowable);
+      const layout = {};
+      let top = 0;
+      for (const row of rows) {
+        const onRow = itemsOnRow(row, rowable);
+        const { subrows, laneCount } = assignSubrows(onRow);
+        const height = Math.max(ROW_HEIGHT, laneCount * MIN_LANE_HEIGHT);
+        layout[row] = { top, height, laneCount, subrows, row };
+        top += height;
+      }
+      return { layout, totalHeight: top };
+    }
+
+    function itemCenterY(item, layout) {
+      const rowInfo = layout[itemRow(item)];
+      const lane = rowInfo.subrows.get(item.id) ?? 0;
+      const laneHeight = rowInfo.height / rowInfo.laneCount;
+      return rowInfo.top + lane * laneHeight + laneHeight / 2;
+    }
+
+    function rowAtY(y, layout) {
+      for (const rowInfo of Object.values(layout)) {
+        if (y >= rowInfo.top && y < rowInfo.top + rowInfo.height) return rowInfo.row;
+      }
+      const rows = Object.values(layout);
+      if (rows.length === 0) return 0;
+      return y < rows[0].top ? rows[0].row : rows[rows.length - 1].row;
+    }
+
+    function taskBarHeight(laneHeight) {
+      return Math.max(14, Math.min(22, laneHeight - 6));
+    }
+
+    function markerSize(laneHeight, defaultSize) {
+      return Math.max(8, Math.min(defaultSize, laneHeight * 0.45));
+    }
+
+    function dependencyEndpoints(source, target, sourceItem, targetItem) {
+      let x1 = source.end.x, y1 = source.end.y;
+      let x2 = target.start.x, y2 = target.start.y;
+      if (sourceItem.type === "milestone") {
+        y1 = target.start.y;
+      } else if (sourceItem.type === "deliverable") {
+        x1 = source.end.x + (source.radius ?? 9);
+      }
+      if (targetItem.type === "deliverable") x2 = target.start.x - (target.radius ?? 9);
+      return { x1, y1, x2, y2 };
+    }
+
+    function rowLabel(row, rowable) {
+      const onRow = itemsOnRow(row, rowable);
+      const custom = onRow.find(item => item.row_label)?.row_label;
+      if (custom) return custom;
+      if (onRow.length === 1) return onRow[0].name;
+      return onRow.map(item => item.name).join(" · ");
+    }
+
+    // --- Selection & editor ---
+
+    async function selectItem(id) {
+      if (selectedId && selectedId !== id && editorDirty) {
+        const ok = await flushAutoSave();
+        if (!ok && editorDirty && !confirm("Discard unsaved changes?")) return;
+      }
+      selectedId = id;
+      const item = ITEMS.find(i => i.id === id);
+      if (!item) return;
+      openEditor(item);
+      highlightSelection();
+    }
+
+    function openEditor(item) {
+      clearTimeout(editorSaveTimer);
+      editorPanel.classList.remove("hidden");
+      editorTitle.textContent = item.name || item.id;
+      editorMeta.textContent = item._source_file ? `File: ${item._source_file}` : "";
+      setEditorText(itemToEditorJson(item));
+      editorDirty = false;
+      hideEditorError();
+      updateEditorStatus("Saved");
+      requestAnimationFrame(refreshCodeEditor);
+    }
+
+    async function closeEditor({ discard = false } = {}) {
+      clearTimeout(editorSaveTimer);
+      if (editorDirty && !discard) {
+        const ok = await flushAutoSave();
+        if (!ok && editorDirty) return;
+      }
+      editorPanel.classList.add("hidden");
+      selectedId = null;
+      editorDirty = false;
+      highlightSelection();
+    }
+
+    function showEditorError(msg) {
+      editorError.textContent = msg;
+      editorError.classList.add("visible");
+    }
+
+    function hideEditorError() {
+      editorError.classList.remove("visible");
+      editorError.textContent = "";
+    }
+
+    jsonEditor.addEventListener("input", () => {
+      if (!cmEditor) scheduleAutoSave();
+    });
+
+    document.getElementById("editor-close").addEventListener("click", async () => {
+      if (editorDirty) {
+        const ok = await flushAutoSave();
+        if (!ok && editorDirty && !confirm("Discard unsaved changes?")) return;
+      }
+      clearTimeout(editorSaveTimer);
+      editorPanel.classList.add("hidden");
+      selectedId = null;
+      editorDirty = false;
+      highlightSelection();
+    });
+
+    document.getElementById("editor-revert").addEventListener("click", () => {
+      const item = ITEMS.find(i => i.id === selectedId);
+      if (item) {
+        clearTimeout(editorSaveTimer);
+        setEditorText(itemToEditorJson(item));
+        editorDirty = false;
+        hideEditorError();
+        updateEditorStatus("Reverted");
+      }
+    });
+
+    function mergeItem(saved) {
+      const idx = ITEMS.findIndex(i => i.id === saved.id);
+      if (idx >= 0) ITEMS[idx] = saved;
+      else ITEMS.push(saved);
+    }
+
+    function highlightSelection() {
+      itemsLayer.querySelectorAll(".task-bar, .deliverable-shape").forEach(el => {
+        el.classList.toggle("selected", el.dataset.id === selectedId);
+      });
+      timelineAxis.querySelectorAll(".milestone-marker").forEach(el => {
+        el.classList.toggle("selected", el.dataset.id === selectedId);
+      });
+    }
+
+    function itemEndDate(item) {
+      if (item.type === "task") return parseDate(item.end);
+      return parseDate(item.date);
+    }
+
+    function earliestAllowedStart(item) {
+      const byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+      let latest = null;
+      for (const predId of item.predecessors || []) {
+        const pred = byId[predId];
+        if (!pred) continue;
+        const end = itemEndDate(pred);
+        if (!latest || end > latest) latest = end;
+      }
+      if (!latest) return null;
+      return addDays(latest, 1);
+    }
+
+    function clampItemToPredecessors(item) {
+      const required = earliestAllowedStart(item);
+      if (!required) return;
+      if (item.type === "task") {
+        const start = parseDate(item.start);
+        if (start < required) {
+          const duration = Math.max(1, daysBetween(start, parseDate(item.end)));
+          item.start = formatDate(required);
+          item.end = formatDate(addDays(required, duration));
+        }
+      } else {
+        const point = parseDate(item.date);
+        if (point < required) item.date = formatDate(required);
+      }
+    }
+
+    function snapDeliverableToMilestone(item) {
+      if (item.type !== "deliverable") return;
+      const deliverableDate = parseDate(item.date);
+      let bestDate = null;
+      let bestDist = MILESTONE_SNAP_DAYS + 1;
+      for (const ms of ITEMS) {
+        if (ms.type !== "milestone" || !ms.date) continue;
+        const msDate = parseDate(ms.date);
+        const dist = Math.abs(daysBetween(msDate, deliverableDate));
+        if (dist <= MILESTONE_SNAP_DAYS && dist < bestDist) {
+          bestDist = dist;
+          bestDate = msDate;
+        }
+      }
+      if (bestDate) item.date = formatDate(bestDate);
+    }
+
+    // --- Drag (threshold so click opens editor) ---
+
+    let dragState = null;
+    let pendingPointer = null;
+
+    function pointerCanvasX(e) {
+      const canvasRect = chartCanvas.getBoundingClientRect();
+      return e.clientX - canvasRect.left + chartScroll.scrollLeft;
+    }
+
+    function beginPendingDrag(e, item, mode) {
+      const isTask = item.type === "task";
+      pendingPointer = {
+        id: item.id,
+        itemType: item.type,
+        mode,
+        svgX: pointerCanvasX(e),
+        clientX: e.clientX,
+        clientY: e.clientY,
+        origStart: isTask ? item.start : item.date,
+        origEnd: isTask ? item.end : item.date,
+      };
+      document.addEventListener("mousemove", onPointerMove);
+      document.addEventListener("mouseup", onPointerUp);
+    }
+
+    function activateDrag() {
+      if (!pendingPointer) return;
+      dragState = {
+        id: pendingPointer.id,
+        itemType: pendingPointer.itemType,
+        mode: pendingPointer.mode,
+        startX: pendingPointer.svgX,
+        origStart: pendingPointer.origStart,
+        origEnd: pendingPointer.origEnd,
+        moved: false,
+      };
+      pendingPointer = null;
+      hideTooltip();
+    }
+
+    function applyDragDates(item, deltaDays) {
+      if (item.type === "task") {
+        let start = parseDate(dragState.origStart);
+        let end = parseDate(dragState.origEnd);
+        if (dragState.mode === "move") {
+          start = addDays(start, deltaDays);
+          end = addDays(end, deltaDays);
+        } else if (dragState.mode === "resize-start") {
+          start = addDays(parseDate(dragState.origStart), deltaDays);
+          if (daysBetween(start, end) < 1) start = addDays(end, -1);
+        } else if (dragState.mode === "resize-end") {
+          end = addDays(parseDate(dragState.origEnd), deltaDays);
+          if (daysBetween(start, end) < 1) end = addDays(start, 1);
+        }
+        item.start = formatDate(start);
+        item.end = formatDate(end);
+      } else if (item.type === "deliverable") {
+        item.date = formatDate(addDays(parseDate(dragState.origStart), deltaDays));
+        snapDeliverableToMilestone(item);
+      }
+      clampItemToPredecessors(item);
+    }
+
+    function datesChanged(item, origStart, origEnd) {
+      if (item.type === "task") {
+        return item.start !== origStart || item.end !== origEnd;
+      }
+      if (item.type === "deliverable") {
+        return item.date !== origStart;
+      }
+      return false;
+    }
+
+    function onPointerMove(e) {
+      if (pendingPointer) {
+        const dx = e.clientX - pendingPointer.clientX;
+        const dy = e.clientY - pendingPointer.clientY;
+        if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) activateDrag();
+      }
+      if (!dragState) return;
+
+      const x = pointerCanvasX(e);
+      const deltaDays = Math.round((x - dragState.startX) / dayWidth);
+
+      const item = ITEMS.find(i => i.id === dragState.id);
+      if (!item || (item.type !== "task" && item.type !== "deliverable")) return;
+
+      const beforeStart = item.type === "task" ? item.start : item.date;
+      const beforeEnd = item.type === "task" ? item.end : null;
+      applyDragDates(item, deltaDays);
+      const changed = item.type === "task"
+        ? (item.start !== beforeStart || item.end !== beforeEnd)
+        : (item.date !== beforeStart);
+      if (changed) {
+        dragState.moved = true;
+        renderTimeline();
+      }
+    }
+
+    async function onPointerUp() {
+      document.removeEventListener("mousemove", onPointerMove);
+      document.removeEventListener("mouseup", onPointerUp);
+
+      if (pendingPointer) {
+        const id = pendingPointer.id;
+        pendingPointer = null;
+        selectItem(id);
+        return;
+      }
+
+      if (!dragState) return;
+
+      const { id, origStart, origEnd, moved } = dragState;
+      dragState = null;
+
+      if (!moved) {
+        selectItem(id);
+        return;
+      }
+
+      const item = ITEMS.find(i => i.id === id);
+      if (!item) return;
+
+      if (!datesChanged(item, origStart, origEnd)) {
+        renderTimeline();
+        return;
+      }
+
+      const update = { id };
+      if (item.type === "task") {
+        update.start = item.start;
+        update.end = item.end;
+      } else if (item.type === "deliverable") {
+        update.date = item.date;
+      } else {
+        renderTimeline();
+        return;
+      }
+
+      try {
+        syncStatus.textContent = "Saving…";
+        const result = await apiSend("POST", `${API}/cascade`, { updates: [update] });
+        for (const saved of result.items) mergeItem(saved);
+        await loadItems();
+        render();
+        syncStatus.textContent = "Saved";
+      } catch (e) {
+        syncStatus.textContent = "Save failed";
+        syncStatus.classList.add("warn");
+        await loadItems();
+        render();
+        alert(`Failed to save: ${e.message}`);
+      }
+    }
+
+    // --- Render ---
+
+    function renderLabels(items, rowLayout, totalHeight) {
+      const rowable = rowableItems(items);
+      const rowsHtml = uniqueRows(rowable).map(row => {
+        const height = rowLayout[row].height;
+        return `<div class="label-row" data-row="${row}" style="height:${height}px">${escapeHtml(rowLabel(row, rowable))}</div>`;
+      }).join("");
+      labelsColumn.innerHTML = `<div class="labels-inner" style="min-height:${totalHeight}px">${rowsHtml}</div>`;
+      labelsColumn.querySelectorAll(".label-row").forEach(el => bindLabelTooltip(el, el.textContent));
+    }
+
+    function renderAxis(minDate, maxDate, width, milestones) {
+      timelineAxis.style.width = `${width}px`;
+      const totalDays = daysBetween(minDate, maxDate);
+      totalDaysWide = totalDays;
+      const step = timelineStep();
+      let html = "";
+      for (let d = 0; d <= totalDays; d += step) {
+        const date = addDays(minDate, d);
+        html += `<span class="axis-label" style="left:${d * dayWidth}px">${formatAxisDate(date)}</span>`;
+      }
+
+      const sorted = [...milestones].sort(
+        (a, b) => parseDate(a.date) - parseDate(b.date) || a.id.localeCompare(b.id)
+      );
+      let lane = 0, lastX = -Infinity;
+      const overlapThreshold = Math.max(48, 24 * dayWidth);
+      for (const ms of sorted) {
+        const x = xForDate(parseDate(ms.date), minDate);
+        if (x - lastX < overlapThreshold) lane = 1 - lane;
+        else lane = 0;
+        lastX = x;
+        html += `<div class="milestone-marker${ms.id === selectedId ? " selected" : ""}" style="left:${x}px; top:${34 + lane * 22}px" data-id="${ms.id}">
+          <div class="milestone-marker-diamond"></div>
+          <div class="milestone-marker-label">${escapeHtml(ms.name)}</div>
+        </div>`;
+      }
+
+      timelineAxis.innerHTML = html;
+      timelineAxis.querySelectorAll(".milestone-marker").forEach(el => {
+        const ms = milestones.find(item => item.id === el.dataset.id);
+        if (!ms) return;
+        bindTooltip(el, ms);
+        el.addEventListener("click", e => {
+          e.stopPropagation();
+          selectItem(ms.id);
+        });
+        el.addEventListener("contextmenu", e => {
+          e.preventDefault();
+          e.stopPropagation();
+          showItemContextMenu(e, ms.id);
+        });
+      });
+    }
+
+    function renderGrid(minDate, maxDate, layout, totalHeight, width, milestones) {
+      gridLayer.setAttribute("width", width);
+      gridLayer.setAttribute("height", totalHeight);
+      chartCanvas.style.width = `${width}px`;
+      chartCanvas.style.height = `${totalHeight}px`;
+
+      let svg = "";
+      const totalDays = daysBetween(minDate, maxDate);
+      const step = timelineStep();
+      for (let d = 0; d <= totalDays; d += step) {
+        const x = d * dayWidth + 0.5;
+        svg += `<line class="grid-line" x1="${x}" y1="0" x2="${x}" y2="${totalHeight}"/>`;
+      }
+      for (const ms of milestones) {
+        const x = xForDate(parseDate(ms.date), minDate) + 0.5;
+        svg += `<line class="milestone-line" x1="${x}" y1="0" x2="${x}" y2="${totalHeight}"/>`;
+      }
+      for (const rowInfo of Object.values(layout)) {
+        const laneHeight = rowInfo.height / rowInfo.laneCount;
+        svg += `<line class="grid-line" x1="0" y1="${rowInfo.top + rowInfo.height + 0.5}" x2="${width}" y2="${rowInfo.top + rowInfo.height + 0.5}"/>`;
+        for (let lane = 1; lane < rowInfo.laneCount; lane++) {
+          const y = rowInfo.top + lane * laneHeight + 0.5;
+          svg += `<line class="subrow-line" x1="0" y1="${y}" x2="${width}" y2="${y}"/>`;
+        }
+      }
+      gridLayer.innerHTML = svg;
+    }
+
+    function renderItems(items, minDate, layout) {
+      itemsLayer.innerHTML = "";
+      linksLayer.innerHTML = "";
+
+      const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+      const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+      marker.setAttribute("id", "arrowhead");
+      marker.setAttribute("markerWidth", "8");
+      marker.setAttribute("markerHeight", "8");
+      marker.setAttribute("refX", "7");
+      marker.setAttribute("refY", "4");
+      marker.setAttribute("orient", "auto");
+      const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      arrowPath.setAttribute("d", "M0,0 L8,4 L0,8 Z");
+      arrowPath.setAttribute("fill", "#64748b");
+      marker.appendChild(arrowPath);
+      defs.appendChild(marker);
+      linksLayer.appendChild(defs);
+
+      const anchors = {};
+      const milestones = milestoneItems(items);
+
+      for (const ms of milestones) {
+        const x = xForDate(parseDate(ms.date), minDate);
+        anchors[ms.id] = { start: { x, y: 0 }, end: { x, y: 0 } };
+      }
+
+      for (const item of items) {
+        if (item.type === "milestone") continue;
+
+        const rowInfo = layout[itemRow(item)];
+        if (!rowInfo) continue;
+        const laneHeight = rowInfo.height / rowInfo.laneCount;
+        const cy = itemCenterY(item, layout);
+        const color = item.color || null;
+
+        if (item.type === "task") {
+          const barHeight = taskBarHeight(laneHeight);
+          const x1 = xForDate(parseDate(item.start), minDate);
+          const x2 = xForDate(parseDate(item.end), minDate);
+          const barW = Math.max(x2 - x1, 6);
+
+          const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+          group.dataset.id = item.id;
+
+          const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rect.setAttribute("class", `task-bar${item.id === selectedId ? " selected" : ""}`);
+          rect.setAttribute("data-id", item.id);
+          rect.setAttribute("x", x1);
+          rect.setAttribute("y", cy - barHeight / 2);
+          rect.setAttribute("width", barW);
+          rect.setAttribute("height", barHeight);
+          if (color) rect.setAttribute("style", `fill: ${color}; stroke: ${color}`);
+
+          const leftHandle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          leftHandle.setAttribute("class", "resize-handle");
+          leftHandle.setAttribute("x", x1);
+          leftHandle.setAttribute("y", cy - barHeight / 2);
+          leftHandle.setAttribute("width", HANDLE_WIDTH);
+          leftHandle.setAttribute("height", barHeight);
+
+          const rightHandle = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+          rightHandle.setAttribute("class", "resize-handle");
+          rightHandle.setAttribute("x", x1 + barW - HANDLE_WIDTH);
+          rightHandle.setAttribute("y", cy - barHeight / 2);
+          rightHandle.setAttribute("width", HANDLE_WIDTH);
+          rightHandle.setAttribute("height", barHeight);
+
+          bindTooltip(rect, item);
+
+          rect.addEventListener("mousedown", e => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            beginPendingDrag(e, item, "move");
+          });
+
+          leftHandle.addEventListener("mousedown", e => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            beginPendingDrag(e, item, "resize-start");
+          });
+
+          rightHandle.addEventListener("mousedown", e => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            beginPendingDrag(e, item, "resize-end");
+          });
+
+          const openItemMenu = e => {
+            e.preventDefault();
+            e.stopPropagation();
+            showItemContextMenu(e, item.id);
+          };
+          rect.addEventListener("contextmenu", openItemMenu);
+          leftHandle.addEventListener("contextmenu", openItemMenu);
+          rightHandle.addEventListener("contextmenu", openItemMenu);
+
+          group.addEventListener("contextmenu", openItemMenu);
+
+          group.appendChild(rect);
+          group.appendChild(leftHandle);
+          group.appendChild(rightHandle);
+          itemsLayer.appendChild(group);
+
+          anchors[item.id] = { type: "task", start: { x: x1, y: cy }, end: { x: x2, y: cy } };
+        } else if (item.type === "deliverable") {
+          const x = xForDate(parseDate(item.date), minDate);
+          const r = markerSize(laneHeight, 9);
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("class", `deliverable-shape${item.id === selectedId ? " selected" : ""}`);
+          circle.setAttribute("data-id", item.id);
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", cy);
+          circle.setAttribute("r", r);
+          if (color) circle.setAttribute("style", `fill: ${color}; stroke: ${color}`);
+          bindTooltip(circle, item);
+          circle.addEventListener("mousedown", e => {
+            if (e.button !== 0) return;
+            e.stopPropagation();
+            beginPendingDrag(e, item, "move");
+          });
+          circle.addEventListener("click", e => { e.stopPropagation(); selectItem(item.id); });
+          circle.addEventListener("contextmenu", e => {
+            e.preventDefault();
+            e.stopPropagation();
+            showItemContextMenu(e, item.id);
+          });
+          itemsLayer.appendChild(circle);
+          anchors[item.id] = { type: "deliverable", radius: r, start: { x, y: cy }, end: { x, y: cy } };
+        }
+      }
+
+      const byId = Object.fromEntries(items.map(i => [i.id, i]));
+      for (const item of items) {
+        const target = anchors[item.id];
+        if (!target || item.type === "milestone") continue;
+        for (const predId of item.predecessors || []) {
+          const pred = byId[predId];
+          if (!pred) continue;
+          const source = anchors[predId];
+          if (!source) continue;
+          const { x1, y1, x2, y2 } = dependencyEndpoints(source, target, pred, item);
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("class", "dependency-line");
+          line.setAttribute("x1", x1);
+          line.setAttribute("y1", y1);
+          line.setAttribute("x2", x2);
+          line.setAttribute("y2", y2);
+          linksLayer.appendChild(line);
+        }
+      }
+
+      const width = chartCanvas.style.width.replace("px", "");
+      const height = chartCanvas.style.height.replace("px", "");
+      itemsLayer.setAttribute("width", width);
+      itemsLayer.setAttribute("height", height);
+      linksLayer.setAttribute("width", width);
+      linksLayer.setAttribute("height", height);
+    }
+
+    function renderTimeline() {
+      const milestones = milestoneItems(ITEMS);
+      const totalDays = daysBetween(viewBounds.min, viewBounds.max);
+      const width = contentWidth(totalDays);
+      const { layout, totalHeight } = cachedLayout;
+      renderAxis(viewBounds.min, viewBounds.max, width, milestones);
+      renderGrid(viewBounds.min, viewBounds.max, layout, totalHeight, width, milestones);
+      renderItems(ITEMS, viewBounds.min, layout);
+    }
+
+    function zoomAt(factor, clientX) {
+      const oldDayWidth = dayWidth;
+      dayWidth = clampDayWidth(dayWidth * factor);
+      if (dayWidth === oldDayWidth) return;
+      const scrollEl = chartScroll;
+      const rect = scrollEl.getBoundingClientRect();
+      const anchorX = clientX ?? rect.left + rect.width / 2;
+      const totalDays = daysBetween(viewBounds.min, viewBounds.max);
+      const oldContentWidth = totalDays * oldDayWidth + 40;
+      const contentX = scrollEl.scrollLeft + (anchorX - rect.left);
+      const ratio = oldContentWidth > 0 ? contentX / oldContentWidth : 0;
+      updateZoomSlider();
+      renderTimeline();
+      scrollEl.scrollLeft = Math.max(0, ratio * contentWidth(totalDays) - (anchorX - rect.left));
+      syncScrollFromChart();
+    }
+
+    function fitTimeline() {
+      const totalDays = daysBetween(viewBounds.min, viewBounds.max);
+      const available = Math.max(120, chartScroll.clientWidth - 40);
+      dayWidth = clampDayWidth(available / totalDays);
+      updateZoomSlider();
+      renderTimeline();
+      if (!initialFitDone) {
+        chartScroll.scrollLeft = 0;
+        initialFitDone = true;
+      }
+      syncScrollFromChart();
+    }
+
+    function render() {
+      const rowable = rowableItems(ITEMS);
+      viewBounds = computeBounds(ITEMS);
+      cachedLayout = buildRowLayout(rowable);
+      renderLabels(ITEMS, cachedLayout.layout, cachedLayout.totalHeight);
+      updateZoomSlider();
+      if (!initialFitDone) fitTimeline();
+      else renderTimeline();
+    }
+
+    // --- Zoom controls ---
+
+    function onWheelZoom(event) {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      zoomAt(event.deltaY < 0 ? 1.12 : 1 / 1.12, event.clientX);
+    }
+
+    chartScroll.addEventListener("wheel", onWheelZoom, { passive: false });
+    timelineScrollX.addEventListener("wheel", onWheelZoom, { passive: false });
+    zoomSlider.addEventListener("input", () => {
+      const target = sliderToDayWidth(Number(zoomSlider.value));
+      const rect = chartScroll.getBoundingClientRect();
+      zoomAt(target / dayWidth, rect.left + rect.width / 2);
+    });
+    zoomInBtn.addEventListener("click", () => {
+      const rect = chartScroll.getBoundingClientRect();
+      zoomAt(1.2, rect.left + rect.width / 2);
+    });
+    zoomOutBtn.addEventListener("click", () => {
+      const rect = chartScroll.getBoundingClientRect();
+      zoomAt(1 / 1.2, rect.left + rect.width / 2);
+    });
+    zoomFitBtn.addEventListener("click", () => { initialFitDone = false; fitTimeline(); });
+
+    // --- Context menu ---
+
+    function hideContextMenu() {
+      contextMenu.classList.remove("visible");
+      ctxTargetId = null;
+      ctxClickPos = null;
+    }
+
+    function showContextMenuAt(e) {
+      contextMenu.style.left = `${e.clientX}px`;
+      contextMenu.style.top = `${e.clientY}px`;
+      contextMenu.classList.add("visible");
+    }
+
+    function showItemContextMenu(e, itemId) {
+      const item = ITEMS.find(i => i.id === itemId);
+      if (!item) return;
+      ctxTargetId = itemId;
+      ctxClickPos = null;
+      ctxItemSection.classList.remove("hidden");
+      ctxChartSection.classList.add("hidden");
+      const deleteBtn = document.getElementById("ctx-delete");
+      const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+      deleteBtn.textContent = `Delete ${typeLabel}`;
+      showContextMenuAt(e);
+    }
+
+    function showChartContextMenu(e) {
+      const canvasRect = chartCanvas.getBoundingClientRect();
+      const x = e.clientX - canvasRect.left + chartScroll.scrollLeft;
+      const y = e.clientY - canvasRect.top + chartScroll.scrollTop;
+      ctxClickPos = {
+        date: formatDate(dateForX(x, viewBounds.min)),
+        row: rowAtY(y, cachedLayout.layout),
+      };
+      ctxTargetId = null;
+      ctxItemSection.classList.add("hidden");
+      ctxChartSection.classList.remove("hidden");
+      showContextMenuAt(e);
+    }
+
+    chartCanvas.addEventListener("contextmenu", e => {
+      const itemEl = e.target.closest("[data-id]");
+      if (itemEl && itemsLayer.contains(itemEl)) return;
+      e.preventDefault();
+      showChartContextMenu(e);
+    });
+
+    document.addEventListener("click", e => {
+      if (!contextMenu.contains(e.target)) hideContextMenu();
+    });
+    document.addEventListener("scroll", hideContextMenu, true);
+
+    document.getElementById("ctx-edit").addEventListener("click", () => {
+      if (ctxTargetId) selectItem(ctxTargetId);
+      hideContextMenu();
+    });
+
+    document.getElementById("ctx-delete").addEventListener("click", async () => {
+      const id = ctxTargetId;
+      hideContextMenu();
+      if (!id) return;
+      const item = ITEMS.find(i => i.id === id);
+      const label = item?.name || id;
+      if (!confirm(`Delete "${label}" and remove its JSON file from disk?`)) return;
+      try {
+        syncStatus.textContent = "Deleting…";
+        await apiSend("DELETE", `${API}/items/${id}`);
+        ITEMS = ITEMS.filter(i => i.id !== id);
+        if (selectedId === id) closeEditor({ discard: true });
+        updateMtimesFromItems();
+        render();
+        syncStatus.textContent = "Deleted";
+      } catch (e) {
+        syncStatus.textContent = "Delete failed";
+        alert(`Failed to delete: ${e.message}`);
+      }
+    });
+
+    document.getElementById("ctx-new-task").addEventListener("click", async () => {
+      hideContextMenu();
+      if (!ctxClickPos) return;
+      try {
+        syncStatus.textContent = "Creating…";
+        const saved = await apiSend("POST", `${API}/items/new-task`, {
+          start: ctxClickPos.date,
+          row: ctxClickPos.row,
+        });
+        mergeItem(saved);
+        await loadItems();
+        render();
+        selectItem(saved.id);
+        syncStatus.textContent = "Created";
+      } catch (e) {
+        syncStatus.textContent = "Create failed";
+        alert(`Failed to create task: ${e.message}`);
+      }
+    });
+
+    // --- Disk sync ---
+
+    async function checkDiskSync() {
+      try {
+        const { files } = await apiGet(`${API}/sync`);
+        const changed = [];
+        const allIds = new Set([...Object.keys(files), ...Object.keys(fileMtimes)]);
+        for (const id of allIds) {
+          if (files[id] !== fileMtimes[id]) changed.push(id);
+        }
+        if (changed.length === 0) {
+          syncStatus.textContent = "In sync";
+          syncStatus.classList.remove("warn");
+          return;
+        }
+        if (editorDirty) {
+          diskChangePending = true;
+          diskBanner.classList.add("visible");
+          document.getElementById("disk-banner-text").textContent =
+            `${changed.length} file(s) changed on disk while you have unsaved edits.`;
+          syncStatus.textContent = "Disk changed";
+          syncStatus.classList.add("warn");
+        } else {
+          await reloadFromDisk();
+        }
+      } catch {
+        syncStatus.textContent = "Sync error";
+      }
+    }
+
+    async function reloadFromDisk() {
+      const prevSelected = selectedId;
+      await loadItems();
+      render();
+      diskChangePending = false;
+      diskBanner.classList.remove("visible");
+      if (prevSelected) {
+        const item = ITEMS.find(i => i.id === prevSelected);
+        if (item) openEditor(item);
+        else closeEditor();
+      }
+      syncStatus.textContent = "Reloaded";
+      syncStatus.classList.remove("warn");
+    }
+
+    document.getElementById("disk-reload-btn").addEventListener("click", async () => {
+      editorDirty = false;
+      await reloadFromDisk();
+    });
+
+    document.getElementById("disk-dismiss-btn").addEventListener("click", () => {
+      diskBanner.classList.remove("visible");
+      diskChangePending = false;
+    });
+
+    // --- Init ---
+
+    async function init() {
+      try {
+        initCodeEditor();
+        await loadItems();
+        loadingOverlay.classList.add("hidden");
+        render();
+        syncStatus.textContent = "In sync";
+        setInterval(checkDiskSync, SYNC_INTERVAL_MS);
+      } catch (e) {
+        loadingOverlay.textContent = `Failed to load: ${e.message}`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -440,6 +440,8 @@
     const MIN_DAY_WIDTH = 0.35;
     const MAX_DAY_WIDTH = 22;
     const PADDING_DAYS = 3;
+    const SUBROW_PROXIMITY_DAYS = 30;
+    const MS_PER_DAY = 86400000;
 
     let dayWidth = BASE_DAY_WIDTH;
     let viewBounds = null;
@@ -663,6 +665,15 @@
       return a.start <= b.end && b.start <= a.end;
     }
 
+    function rangesConflict(rangeA, typeA, rangeB, typeB) {
+      if (typeA === "deliverable" && typeB === "deliverable") {
+        const centerA = (rangeA.start + rangeA.end) / 2;
+        const centerB = (rangeB.start + rangeB.end) / 2;
+        return Math.abs(centerA - centerB) < SUBROW_PROXIMITY_DAYS * MS_PER_DAY;
+      }
+      return rangesOverlap(rangeA, rangeB);
+    }
+
     function assignSubrows(itemsOnRow) {
       const sorted = [...itemsOnRow].sort((a, b) => {
         const ta = itemTimeRange(a);
@@ -674,7 +685,7 @@
 
       function placeInLane(item, lane) {
         while (lanes.length <= lane) lanes.push([]);
-        lanes[lane].push(itemTimeRange(item));
+        lanes[lane].push({ range: itemTimeRange(item), type: item.type });
         subrows.set(item.id, lane);
       }
 
@@ -686,7 +697,11 @@
         }
 
         const range = itemTimeRange(item);
-        let lane = lanes.findIndex(existing => !existing.some(r => rangesOverlap(r, range)));
+        let lane = lanes.findIndex(
+          existing => !existing.some(
+            entry => rangesConflict(range, item.type, entry.range, entry.type)
+          )
+        );
         if (lane === -1) {
           lane = lanes.length;
         }
