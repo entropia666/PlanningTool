@@ -1,0 +1,14 @@
+{
+  "id": "new-task-1781729592942",
+  "type": "task",
+  "name": "Aero data for HQ, Perform",
+  "description": "",
+  "start": "2027-01-02",
+  "end": "2027-03-20",
+  "predecessors": [
+    "new-task-1781729174012"
+  ],
+  "status": "planned",
+  "tags": [],
+  "row": 9
+}

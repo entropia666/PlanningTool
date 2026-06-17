@@ -24,6 +24,8 @@
       --header-height: 72px;
       --editor-width: 380px;
       --accent: #2563eb;
+      --select-glow: rgba(37, 99, 235, 0.55);
+      --select-bg: #eff6ff;
     }
 
     * { box-sizing: border-box; }
@@ -190,8 +192,14 @@
     }
 
     .milestone-marker.selected .milestone-marker-diamond {
-      outline: 2px solid var(--accent);
+      outline: 3px solid var(--accent);
       outline-offset: 2px;
+      filter: drop-shadow(0 0 6px var(--select-glow));
+    }
+
+    .milestone-marker.selected .milestone-marker-label {
+      color: #1d4ed8;
+      font-weight: 700;
     }
 
     .timeline-scroll-x { overflow-x: auto; flex: 1; }
@@ -226,6 +234,13 @@
     }
 
     .label-row:hover { background: #f8fafc; }
+
+    .label-row.selected {
+      background: var(--select-bg);
+      box-shadow: inset 3px 0 0 var(--accent);
+      font-weight: 600;
+      color: #1e40af;
+    }
     .subrow-line { stroke: #eef1f5; stroke-width: 1; }
 
     .chart-scroll { overflow: auto; flex: 1; }
@@ -247,9 +262,22 @@
       cursor: grab;
     }
 
-    .task-bar:hover { filter: brightness(1.08); }
-    .task-bar.selected { stroke: var(--accent); stroke-width: 2; }
+    .task-bar:hover:not(.selected) { filter: brightness(1.08); }
+
+    .task-bar.selected {
+      stroke: #1d4ed8 !important;
+      stroke-width: 3 !important;
+      filter: drop-shadow(0 0 8px var(--select-glow)) drop-shadow(0 0 2px #1d4ed8);
+    }
+
     .task-bar.dragging { cursor: grabbing; opacity: 0.85; }
+
+    .task-bar-label {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-weight: 600;
+      pointer-events: none;
+      paint-order: stroke fill;
+    }
 
     .resize-handle {
       fill: transparent;
@@ -267,8 +295,13 @@
 
     .deliverable-shape.dragging { cursor: grabbing; opacity: 0.85; }
 
-    .deliverable-shape:hover { filter: brightness(1.08); }
-    .deliverable-shape.selected { stroke: var(--accent); stroke-width: 2.5; }
+    .deliverable-shape:hover:not(.selected) { filter: brightness(1.08); }
+
+    .deliverable-shape.selected {
+      stroke: #1d4ed8 !important;
+      stroke-width: 3 !important;
+      filter: drop-shadow(0 0 8px var(--select-glow)) drop-shadow(0 0 2px #1d4ed8);
+    }
 
     .dependency-line {
       fill: none;
@@ -453,6 +486,8 @@
 
     #context-menu button:hover { background: #f1f5f9; }
 
+    #context-menu button.hidden { display: none; }
+
     #context-menu button.danger { color: #b91c1c; }
     #context-menu button.danger:hover { background: #fef2f2; }
 
@@ -500,6 +535,24 @@
     }
 
     .loading-overlay.hidden { display: none; }
+
+    .inline-name-editor {
+      position: fixed;
+      z-index: 2500;
+      margin: 0;
+      border: 2px solid #ffffff;
+      outline: 2px solid var(--accent);
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-weight: 600;
+      color: #ffffff;
+      background: #2563eb;
+      padding: 0 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .inline-name-editor.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -568,6 +621,7 @@
   <div id="context-menu">
     <div class="ctx-section hidden" id="ctx-item-section">
       <button type="button" id="ctx-edit">Edit JSON</button>
+      <button type="button" id="ctx-make-predecessor" class="hidden">Make predecessor of selection</button>
       <button type="button" id="ctx-delete" class="danger">Delete</button>
     </div>
     <div class="ctx-section" id="ctx-chart-section">
@@ -576,6 +630,7 @@
   </div>
 
   <div id="tooltip" role="tooltip"></div>
+  <input id="inline-name-editor" class="inline-name-editor hidden" type="text" autocomplete="off" spellcheck="false" aria-label="Task name">
   <div class="loading-overlay" id="loading">Loading plan…</div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.18/codemirror.min.js"></script>
@@ -585,8 +640,10 @@
     const PLAN = "{{DEFAULT_PLAN}}";
     const API = `/api/plans/${PLAN}`;
     const INTERNAL_KEYS = new Set(["_source_file", "_auto_row", "_mtime"]);
+    const TOOLTIP_SKIP_KEYS = new Set([
+      "id", "type", "tags", "row", "group", "row_label", "anchor", "name",
+    ]);
     const SYNC_INTERVAL_MS = 3000;
-    const NEW_TASK_DURATION_DAYS = 14;
 
     let ITEMS = [];
     const ROW_HEIGHT = 48;
@@ -635,9 +692,13 @@
     const syncStatus = document.getElementById("sync-status");
     const diskBanner = document.getElementById("disk-banner");
     const loadingOverlay = document.getElementById("loading");
+    const inlineNameEditor = document.getElementById("inline-name-editor");
 
     let ctxClickPos = null;
     let ctxTargetId = null;
+    let inlineEditItemId = null;
+    let taskClickTimer = null;
+    let skipNextTaskSelect = false;
     let cmEditor = null;
     let editorSaveTimer = null;
     let editorSaving = false;
@@ -667,7 +728,25 @@
       editorStatus.classList.toggle("error", kind === "error");
     }
 
-    function setEditorText(text) {
+    function setEditorText(text, { preserveCursor = false } = {}) {
+      if (cmEditor && preserveCursor) {
+        const cursor = cmEditor.getCursor();
+        const scroll = cmEditor.getScrollInfo();
+        const hadFocus = document.activeElement === cmEditor.getInputField();
+        editorLoading = true;
+        cmEditor.setValue(text);
+        editorLoading = false;
+        if (hadFocus) {
+          const lastLine = Math.max(0, cmEditor.lineCount() - 1);
+          cmEditor.setCursor({
+            line: Math.min(cursor.line, lastLine),
+            ch: cursor.ch,
+          });
+          cmEditor.scrollTo(scroll.left, scroll.top);
+          cmEditor.focus();
+        }
+        return;
+      }
       editorLoading = true;
       if (cmEditor) cmEditor.setValue(text);
       else jsonEditor.value = text;
@@ -691,9 +770,10 @@
       if (!selectedId || editorSaving || editorLoading) return false;
       clearTimeout(editorSaveTimer);
 
+      const textAtSave = getEditorText();
       let parsed;
       try {
-        parsed = JSON.parse(getEditorText());
+        parsed = JSON.parse(textAtSave);
       } catch (e) {
         showEditorError(`Invalid JSON: ${e.message}`);
         updateEditorStatus("Invalid JSON", "error");
@@ -706,23 +786,44 @@
       }
 
       const current = ITEMS.find(i => i.id === selectedId);
-      if (current && getEditorText() === itemToEditorJson(current)) {
+      if (current && textAtSave === itemToEditorJson(current)) {
         editorDirty = false;
         hideEditorError();
         updateEditorStatus("Saved");
         return true;
       }
 
+      if (getEditorText() !== textAtSave) {
+        scheduleAutoSave();
+        return false;
+      }
+
       editorSaving = true;
       updateEditorStatus("Saving…");
       try {
         const saved = await apiSend("PUT", `${API}/items/${selectedId}`, parsed);
+
+        if (getEditorText() !== textAtSave) {
+          mergeItem(saved);
+          updateMtimesFromItems();
+          render();
+          editorDirty = true;
+          updateEditorStatus("Unsaved changes");
+          scheduleAutoSave();
+          return false;
+        }
+
         mergeItem(saved);
         editorDirty = false;
         hideEditorError();
         editorTitle.textContent = saved.name || saved.id;
         editorMeta.textContent = saved._source_file ? `File: ${saved._source_file}` : "";
-        setEditorText(itemToEditorJson(saved));
+
+        const savedText = itemToEditorJson(saved);
+        if (savedText !== textAtSave) {
+          setEditorText(savedText, { preserveCursor: true });
+        }
+
         updateMtimesFromItems();
         render();
         updateEditorStatus("Saved");
@@ -943,12 +1044,65 @@
       return String(value);
     }
 
+    function isTooltipField(key) {
+      return !key.startsWith("_") && !TOOLTIP_SKIP_KEYS.has(key);
+    }
+
+    function fitTaskBarLabel(name, barW, barHeight) {
+      const pad = 5;
+      const innerW = barW - pad * 2;
+      if (innerW < 12 || barHeight < 12) return null;
+      const fontSize = Math.max(7, Math.min(11, barHeight - 4));
+      const charW = fontSize * 0.58;
+      const maxChars = Math.floor(innerW / charW);
+      if (maxChars < 2) return null;
+      const label = name.length > maxChars
+        ? `${name.slice(0, Math.max(1, maxChars - 1))}…`
+        : name;
+      return { label, fontSize, pad };
+    }
+
+    function barLabelColors(barColor) {
+      const fill = barColor || "#3b82f6";
+      let r = 59, g = 130, b = 246;
+      const hex = fill.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+      if (hex) {
+        let h = hex[1];
+        if (h.length === 3) h = h.split("").map(c => c + c).join("");
+        r = parseInt(h.slice(0, 2), 16);
+        g = parseInt(h.slice(2, 4), 16);
+        b = parseInt(h.slice(4, 6), 16);
+      }
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return lum > 0.6
+        ? { fill: "#0f172a", stroke: "#ffffff" }
+        : { fill: "#ffffff", stroke: "#0f172a" };
+    }
+
+    function appendTaskBarLabel(group, name, x1, cy, barW, barHeight, barColor) {
+      const info = fitTaskBarLabel(name, barW, barHeight);
+      if (!info) return;
+      const colors = barLabelColors(barColor);
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("class", "task-bar-label");
+      text.setAttribute("x", String(x1 + info.pad));
+      text.setAttribute("y", String(cy));
+      text.setAttribute("dominant-baseline", "middle");
+      text.setAttribute("font-size", String(info.fontSize));
+      text.setAttribute("fill", colors.fill);
+      text.setAttribute("stroke", colors.stroke);
+      text.setAttribute("stroke-width", "1.5");
+      text.setAttribute("paint-order", "stroke fill");
+      text.textContent = info.label;
+      group.appendChild(text);
+    }
+
     // --- Tooltip ---
 
     function showTooltip(item, event) {
       if (dragState) return;
       const rows = Object.entries(item)
-        .filter(([key]) => !key.startsWith("_"))
+        .filter(([key]) => isTooltipField(key))
         .map(([key, value]) =>
           `<dt>${formatFieldName(key)}</dt><dd>${formatFieldValue(value)}</dd>`
         ).join("");
@@ -1208,6 +1362,123 @@
       else ITEMS.push(saved);
     }
 
+    function scheduleTaskSelect(id) {
+      if (skipNextTaskSelect) {
+        skipNextTaskSelect = false;
+        return;
+      }
+      clearTimeout(taskClickTimer);
+      taskClickTimer = setTimeout(() => {
+        taskClickTimer = null;
+        if (inlineEditItemId === id) return;
+        selectItem(id);
+      }, 250);
+    }
+
+    function repositionInlineNameEditor() {
+      if (!inlineEditItemId) return;
+      const rect = itemsLayer.querySelector(`.task-bar[data-id="${inlineEditItemId}"]`);
+      if (!rect) {
+        closeInlineNameEditor();
+        return;
+      }
+      const bounds = rect.getBoundingClientRect();
+      if (bounds.width < 8 || bounds.height < 8) return;
+      const item = ITEMS.find(i => i.id === inlineEditItemId);
+      const colors = barLabelColors(item?.color || null);
+      const fontSize = Math.max(8, Math.min(13, bounds.height - 4));
+      inlineNameEditor.style.left = `${bounds.left}px`;
+      inlineNameEditor.style.top = `${bounds.top}px`;
+      inlineNameEditor.style.width = `${bounds.width}px`;
+      inlineNameEditor.style.height = `${bounds.height}px`;
+      inlineNameEditor.style.fontSize = `${fontSize}px`;
+      inlineNameEditor.style.lineHeight = `${bounds.height}px`;
+      inlineNameEditor.style.color = colors.fill;
+      inlineNameEditor.style.background = item?.color || "#2563eb";
+      inlineNameEditor.style.borderColor = colors.fill;
+    }
+
+    function startInlineNameEdit(itemId, { selectAll = true } = {}) {
+      const item = ITEMS.find(i => i.id === itemId);
+      if (!item || item.type !== "task") return;
+      hideTooltip();
+      clearTimeout(taskClickTimer);
+      inlineEditItemId = itemId;
+      selectedId = itemId;
+      highlightSelection();
+      editorPanel.classList.add("hidden");
+      inlineNameEditor.value = item.name || "";
+      inlineNameEditor.classList.remove("hidden");
+      repositionInlineNameEditor();
+      inlineNameEditor.focus();
+      if (selectAll) inlineNameEditor.select();
+    }
+
+    function closeInlineNameEditor() {
+      inlineEditItemId = null;
+      inlineNameEditor.classList.add("hidden");
+    }
+
+    async function commitInlineNameEdit() {
+      const itemId = inlineEditItemId;
+      if (!itemId) return;
+      const item = ITEMS.find(i => i.id === itemId);
+      if (!item) {
+        closeInlineNameEditor();
+        return;
+      }
+      const name = inlineNameEditor.value.trim() || "New task";
+      closeInlineNameEditor();
+      if (item.name === name) return;
+
+      const payload = stripInternal(item);
+      payload.name = name;
+      try {
+        syncStatus.textContent = "Saving…";
+        const saved = await apiSend("PUT", `${API}/items/${itemId}`, payload);
+        mergeItem(saved);
+        updateMtimesFromItems();
+        render();
+        selectedId = itemId;
+        highlightSelection();
+        syncStatus.textContent = "Saved";
+      } catch (err) {
+        syncStatus.textContent = "Save failed";
+        alert(`Failed to rename task: ${err.message}`);
+      }
+    }
+
+    function bindTaskBarSelect(rect, item) {
+      rect.addEventListener("dblclick", e => {
+        e.preventDefault();
+        e.stopPropagation();
+        clearTimeout(taskClickTimer);
+        taskClickTimer = null;
+        skipNextTaskSelect = true;
+        startInlineNameEdit(item.id);
+      });
+    }
+
+    inlineNameEditor.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        commitInlineNameEdit();
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        closeInlineNameEditor();
+      }
+    });
+    inlineNameEditor.addEventListener("blur", () => {
+      if (inlineEditItemId) commitInlineNameEdit();
+    });
+
+    chartScroll.addEventListener("scroll", () => {
+      if (inlineEditItemId) repositionInlineNameEditor();
+    });
+    timelineScrollX.addEventListener("scroll", () => {
+      if (inlineEditItemId) repositionInlineNameEditor();
+    });
+
     function highlightSelection() {
       itemsLayer.querySelectorAll(".task-bar, .deliverable-shape").forEach(el => {
         el.classList.toggle("selected", el.dataset.id === selectedId);
@@ -1215,6 +1486,23 @@
       timelineAxis.querySelectorAll(".milestone-marker").forEach(el => {
         el.classList.toggle("selected", el.dataset.id === selectedId);
       });
+
+      const rowable = rowableItems(ITEMS);
+      labelsColumn.querySelectorAll(".label-row").forEach(el => {
+        const row = Number(el.dataset.row);
+        const hasSelected = rowable
+          .filter(i => (i.row ?? 0) === row)
+          .some(i => i.id === selectedId);
+        el.classList.toggle("selected", hasSelected);
+      });
+
+      if (selectedId) {
+        const taskGroup = itemsLayer.querySelector(`.task-bar[data-id="${selectedId}"]`)?.parentNode;
+        if (taskGroup?.parentNode === itemsLayer) itemsLayer.appendChild(taskGroup);
+        const deliverable = itemsLayer.querySelector(`.deliverable-shape[data-id="${selectedId}"]`);
+        if (deliverable) itemsLayer.appendChild(deliverable);
+      }
+      repositionInlineNameEditor();
     }
 
     function itemEndDate(item) {
@@ -1374,8 +1662,10 @@
 
       if (pendingPointer) {
         const id = pendingPointer.id;
+        const item = ITEMS.find(i => i.id === id);
         pendingPointer = null;
-        selectItem(id);
+        if (item?.type === "task") scheduleTaskSelect(id);
+        else selectItem(id);
         return;
       }
 
@@ -1385,7 +1675,9 @@
       dragState = null;
 
       if (!moved) {
-        selectItem(id);
+        const item = ITEMS.find(i => i.id === id);
+        if (item?.type === "task") scheduleTaskSelect(id);
+        else selectItem(id);
         return;
       }
 
@@ -1577,6 +1869,7 @@
           rightHandle.setAttribute("height", barHeight);
 
           bindTooltip(rect, item);
+          bindTaskBarSelect(rect, item);
 
           rect.addEventListener("mousedown", e => {
             if (e.button !== 0) return;
@@ -1610,6 +1903,9 @@
           group.appendChild(rect);
           group.appendChild(leftHandle);
           group.appendChild(rightHandle);
+          if (item.id !== inlineEditItemId) {
+            appendTaskBarLabel(group, item.name, x1, cy, barW, barHeight, color);
+          }
           itemsLayer.appendChild(group);
 
           anchors[item.id] = { type: "task", start: { x: x1, y: cy }, end: { x: x2, y: cy } };
@@ -1666,6 +1962,7 @@
       itemsLayer.setAttribute("height", height);
       linksLayer.setAttribute("width", width);
       linksLayer.setAttribute("height", height);
+      highlightSelection();
     }
 
     function renderTimeline() {
@@ -1676,6 +1973,7 @@
       renderAxis(viewBounds.min, viewBounds.max, width, milestones);
       renderGrid(viewBounds.min, viewBounds.max, layout, totalHeight, width, milestones);
       renderItems(ITEMS, viewBounds.min, layout);
+      if (inlineEditItemId) repositionInlineNameEditor();
     }
 
     function zoomAt(factor, clientX) {
@@ -1716,6 +2014,7 @@
       updateZoomSlider();
       if (!initialFitDone) fitTimeline();
       else renderTimeline();
+      highlightSelection();
     }
 
     // --- Zoom controls ---
@@ -1743,6 +2042,29 @@
     });
     zoomFitBtn.addEventListener("click", () => { initialFitDone = false; fitTimeline(); });
 
+    function wouldCreateCycle(successorId, predecessorId) {
+      const successors = {};
+      for (const item of ITEMS) {
+        for (const p of item.predecessors || []) {
+          if (!successors[p]) successors[p] = [];
+          successors[p].push(item.id);
+        }
+      }
+      const queue = [successorId];
+      const seen = new Set([successorId]);
+      while (queue.length) {
+        const id = queue.shift();
+        for (const next of successors[id] || []) {
+          if (next === predecessorId) return true;
+          if (!seen.has(next)) {
+            seen.add(next);
+            queue.push(next);
+          }
+        }
+      }
+      return false;
+    }
+
     // --- Context menu ---
 
     function hideContextMenu() {
@@ -1750,6 +2072,8 @@
       ctxTargetId = null;
       ctxClickPos = null;
     }
+
+    contextMenu.addEventListener("click", e => e.stopPropagation());
 
     function showContextMenuAt(e) {
       contextMenu.style.left = `${e.clientX}px`;
@@ -1767,6 +2091,23 @@
       const deleteBtn = document.getElementById("ctx-delete");
       const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
       deleteBtn.textContent = `Delete ${typeLabel}`;
+
+      const makePredBtn = document.getElementById("ctx-make-predecessor");
+      const selected = selectedId ? ITEMS.find(i => i.id === selectedId) : null;
+      const canLink = selected && selectedId !== itemId;
+      if (canLink) {
+        const preds = selected.predecessors || [];
+        const already = preds.includes(itemId);
+        makePredBtn.classList.toggle("hidden", already);
+        makePredBtn.disabled = already;
+        const selName = selected.name || selected.id;
+        makePredBtn.textContent = already
+          ? "Already a predecessor"
+          : `Add as predecessor of “${selName}”`;
+      } else {
+        makePredBtn.classList.add("hidden");
+      }
+
       showContextMenuAt(e);
     }
 
@@ -1801,6 +2142,57 @@
       hideContextMenu();
     });
 
+    document.getElementById("ctx-make-predecessor").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const predecessorId = ctxTargetId;
+      const successorId = selectedId;
+      hideContextMenu();
+      if (!predecessorId || !successorId || predecessorId === successorId) return;
+
+      if (wouldCreateCycle(successorId, predecessorId)) {
+        alert("Cannot add predecessor: this would create a circular dependency.");
+        return;
+      }
+
+      const successor = ITEMS.find(i => i.id === successorId);
+      if (!successor) return;
+
+      if (editorDirty && selectedId === successorId) {
+        const ok = await flushAutoSave();
+        if (!ok && editorDirty) return;
+      }
+
+      const preds = [...(successor.predecessors || [])];
+      if (preds.includes(predecessorId)) return;
+      preds.push(predecessorId);
+
+      const payload = stripInternal(successor);
+      payload.predecessors = preds;
+
+      try {
+        syncStatus.textContent = "Linking…";
+        const saved = await apiSend("PUT", `${API}/items/${successorId}`, payload);
+        mergeItem(saved);
+
+        const cascadeUpdate = { id: successorId };
+        if (saved.type === "task") {
+          cascadeUpdate.start = saved.start;
+          cascadeUpdate.end = saved.end;
+        } else if (saved.date) {
+          cascadeUpdate.date = saved.date;
+        }
+        await apiSend("POST", `${API}/cascade`, { updates: [cascadeUpdate] });
+
+        await loadItems();
+        render();
+        selectItem(successorId);
+        syncStatus.textContent = "Linked";
+      } catch (err) {
+        syncStatus.textContent = "Link failed";
+        alert(`Failed to add predecessor: ${err.message}`);
+      }
+    });
+
     document.getElementById("ctx-delete").addEventListener("click", async () => {
       const id = ctxTargetId;
       hideContextMenu();
@@ -1822,23 +2214,25 @@
       }
     });
 
-    document.getElementById("ctx-new-task").addEventListener("click", async () => {
+    document.getElementById("ctx-new-task").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const pos = ctxClickPos;
       hideContextMenu();
-      if (!ctxClickPos) return;
+      if (!pos) return;
       try {
         syncStatus.textContent = "Creating…";
         const saved = await apiSend("POST", `${API}/items/new-task`, {
-          start: ctxClickPos.date,
-          row: ctxClickPos.row,
+          start: pos.date,
+          row: pos.row,
         });
         mergeItem(saved);
         await loadItems();
         render();
-        selectItem(saved.id);
+        startInlineNameEdit(saved.id, { selectAll: true });
         syncStatus.textContent = "Created";
-      } catch (e) {
+      } catch (err) {
         syncStatus.textContent = "Create failed";
-        alert(`Failed to create task: ${e.message}`);
+        alert(`Failed to create task: ${err.message}`);
       }
     });
 

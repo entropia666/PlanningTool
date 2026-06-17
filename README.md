@@ -32,7 +32,7 @@ Open [http://localhost:8000](http://localhost:8000). Options: `--port 8000`, `--
 
 Both the web app and `generate_plan.py` read the same JSON files under `data/<plan>/` (one file per item). The disk is the source of truth — there is no database.
 
-1. **Edit in the browser** — drag task bars to move or resize (snaps to whole days, pushes dependent items forward), click any item to edit JSON in the side panel, right-click empty chart area to create a new task (14-day default duration).
+1. **Edit in the browser** — drag task bars to move or resize (snaps to whole days, pushes dependent items forward), click any item to edit JSON in the side panel, right-click empty chart area to create a new task (3-month default duration).
 2. **Edit in Cursor** — change any `data/aircraft-design/*.json` file directly; the web app polls every 3 seconds and reloads (or prompts if you have unsaved panel edits).
 3. **Static export** — `python generate_plan.py` still produces a read-only HTML file using `templates/gantt.html`.
 

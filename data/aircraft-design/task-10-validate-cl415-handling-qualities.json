@@ -2,11 +2,14 @@
   "id": "validate-cl415-handling-qualities",
   "type": "task",
   "name": "Validate CL 415 handling qualities",
-  "description": "Validate CL-415 reference aircraft handling qualities against programme criteria ahead of concept review.",
+  "description": "Validate CL-415 reference aircraft handling qualities",
   "start": "2027-04-07",
   "end": "2027-05-14",
   "predecessors": [
-    "CL 415 Aero data creation"
+    "CL 415 Aero data creation",
+    "new-task-1781728093797",
+    "new-task-1781727966427",
+    "new-task-1781727940372"
   ],
   "group": "handling-qualities",
   "row_label": "Handling qualities / actuator",
@@ -18,5 +21,6 @@
     "handling-qualities",
     "CL-415",
     "flight-physics"
-  ]
+  ],
+  "row": 2
 }

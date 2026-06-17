@@ -4,7 +4,10 @@
   "name": "Planform freeze",
   "description": "Concept review deliverable — frozen wing and empennage planform geometry.",
   "date": "2027-05-16",
-  "predecessors": [],
+  "predecessors": [
+    "new-task-1781728931019",
+    "new-task-1781729363543"
+  ],
   "group": "planform",
   "status": "planned",
   "tags": [
@@ -13,5 +16,6 @@
     "concept-review",
     "planform",
     "configuration"
-  ]
+  ],
+  "row": 8
 }

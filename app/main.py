@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from datetime import timedelta
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +12,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 
 from plan_logic import (
     INTERNAL_FIELDS,
+    NEW_TASK_DURATION_MONTHS,
+    add_calendar_months,
     apply_cascade,
     assign_rows,
     clamp_to_predecessors,
@@ -224,7 +225,7 @@ def create_app(default_plan: str = "aircraft-design") -> FastAPI:
             raise HTTPException(status_code=400, detail="'start' date required")
 
         start = parse_date(start_str)
-        end = start + timedelta(days=14)
+        end = add_calendar_months(start, NEW_TASK_DURATION_MONTHS)
         item = new_task_template(format_date(start), format_date(end), row)
         directory = data_dir(plan)
         filename = make_filename(directory, "task", item["name"])

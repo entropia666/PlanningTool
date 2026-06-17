@@ -312,6 +312,13 @@
 
     .task-bar:hover { filter: brightness(1.08); }
 
+    .task-bar-label {
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      font-weight: 600;
+      pointer-events: none;
+      paint-order: stroke fill;
+    }
+
     .milestone-shape {
       fill: var(--milestone);
       stroke: #d97706;
@@ -442,6 +449,9 @@
     const PADDING_DAYS = 3;
     const SUBROW_PROXIMITY_DAYS = 30;
     const MS_PER_DAY = 86400000;
+    const TOOLTIP_SKIP_KEYS = new Set([
+      "id", "type", "tags", "row", "group", "row_label", "anchor", "name",
+    ]);
 
     let dayWidth = BASE_DAY_WIDTH;
     let viewBounds = null;
@@ -587,9 +597,62 @@
       return String(value);
     }
 
+    function isTooltipField(key) {
+      return !key.startsWith("_") && !TOOLTIP_SKIP_KEYS.has(key);
+    }
+
+    function fitTaskBarLabel(name, barW, barHeight) {
+      const pad = 5;
+      const innerW = barW - pad * 2;
+      if (innerW < 12 || barHeight < 12) return null;
+      const fontSize = Math.max(7, Math.min(11, barHeight - 4));
+      const charW = fontSize * 0.58;
+      const maxChars = Math.floor(innerW / charW);
+      if (maxChars < 2) return null;
+      const label = name.length > maxChars
+        ? `${name.slice(0, Math.max(1, maxChars - 1))}…`
+        : name;
+      return { label, fontSize, pad };
+    }
+
+    function barLabelColors(barColor) {
+      const fill = barColor || "#3b82f6";
+      let r = 59, g = 130, b = 246;
+      const hex = fill.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+      if (hex) {
+        let h = hex[1];
+        if (h.length === 3) h = h.split("").map(c => c + c).join("");
+        r = parseInt(h.slice(0, 2), 16);
+        g = parseInt(h.slice(2, 4), 16);
+        b = parseInt(h.slice(4, 6), 16);
+      }
+      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return lum > 0.6
+        ? { fill: "#0f172a", stroke: "#ffffff" }
+        : { fill: "#ffffff", stroke: "#0f172a" };
+    }
+
+    function appendTaskBarLabel(parent, name, x1, cy, barW, barHeight, barColor) {
+      const info = fitTaskBarLabel(name, barW, barHeight);
+      if (!info) return;
+      const colors = barLabelColors(barColor);
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("class", "task-bar-label");
+      text.setAttribute("x", String(x1 + info.pad));
+      text.setAttribute("y", String(cy));
+      text.setAttribute("dominant-baseline", "middle");
+      text.setAttribute("font-size", String(info.fontSize));
+      text.setAttribute("fill", colors.fill);
+      text.setAttribute("stroke", colors.stroke);
+      text.setAttribute("stroke-width", "1.5");
+      text.setAttribute("paint-order", "stroke fill");
+      text.textContent = info.label;
+      parent.appendChild(text);
+    }
+
     function showTooltip(item, event) {
       const rows = Object.entries(item)
-        .filter(([key]) => !key.startsWith("_"))
+        .filter(([key]) => isTooltipField(key))
         .map(([key, value]) =>
           `<dt>${formatFieldName(key)}</dt><dd>${formatFieldValue(value)}</dd>`
         )
@@ -904,17 +967,19 @@
           const barHeight = taskBarHeight(laneHeight);
           const x1 = xForDate(parseDate(item.start), minDate);
           const x2 = xForDate(parseDate(item.end), minDate);
+          const barW = Math.max(x2 - x1, 6);
           const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
           rect.setAttribute("class", "task-bar");
           rect.setAttribute("x", x1);
           rect.setAttribute("y", cy - barHeight / 2);
-          rect.setAttribute("width", Math.max(x2 - x1, 6));
+          rect.setAttribute("width", barW);
           rect.setAttribute("height", barHeight);
           if (color) {
             rect.setAttribute("style", `fill: ${color}; stroke: ${color}`);
           }
           bindTooltip(rect, item);
           itemsLayer.appendChild(rect);
+          appendTaskBarLabel(itemsLayer, item.name, x1, cy, barW, barHeight, color);
           anchors[item.id] = {
             type: "task",
             start: { x: x1, y: cy },

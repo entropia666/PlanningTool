@@ -5,7 +5,9 @@
   "description": "Development of manoeuvre and gust load cases for primary structure and overall aircraft loads envelope.",
   "start": "2028-06-14",
   "end": "2028-10-15",
-  "predecessors": [],
+  "predecessors": [
+    "new-task-1781728461373"
+  ],
   "group": "loads",
   "row_label": "Loads analysis",
   "status": "planned",

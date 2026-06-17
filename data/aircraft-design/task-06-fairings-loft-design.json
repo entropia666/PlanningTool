@@ -3,7 +3,7 @@
   "type": "task",
   "name": "Fairings and other details loft design",
   "description": "External loft design for fairings, interfaces, and other aerodynamic details.",
-  "start": "2028-07-02",
+  "start": "2028-05-06",
   "end": "2028-10-13",
   "predecessors": [],
   "group": "fairings-loft",

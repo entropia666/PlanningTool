@@ -1,0 +1,14 @@
+{
+  "id": "new-task-1781729363543",
+  "type": "task",
+  "name": "Evaluate F100 performance",
+  "description": "",
+  "start": "2027-04-07",
+  "end": "2027-05-14",
+  "predecessors": [
+    "new-task-1781729592942"
+  ],
+  "status": "planned",
+  "tags": [],
+  "row": 0
+}

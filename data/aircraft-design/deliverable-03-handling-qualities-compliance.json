@@ -4,9 +4,21 @@
   "name": "Handling qualities compliance (CS-25, MIL spec, and criteria)",
   "description": "Preliminary design review deliverable — handling qualities compliance assessment against CS-25, applicable MIL specifications, and other programme criteria.",
   "date": "2028-07-30",
-  "predecessors": [],
+  "predecessors": [
+    "new-task-1781727460159"
+  ],
   "group": "handling-qualities",
   "status": "planned",
-  "tags": ["aircraft-design", "deliverable", "preliminary-design", "handling-qualities", "compliance"],
-  "criteria": ["CS-25", "MIL-spec"]
+  "tags": [
+    "aircraft-design",
+    "deliverable",
+    "preliminary-design",
+    "handling-qualities",
+    "compliance"
+  ],
+  "criteria": [
+    "CS-25",
+    "MIL-spec"
+  ],
+  "row": 2
 }

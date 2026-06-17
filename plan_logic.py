@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 import json
 import re
 import time
@@ -26,6 +27,17 @@ def parse_date(value: str) -> date:
 
 def format_date(value: date) -> str:
     return value.strftime("%Y-%m-%d")
+
+
+NEW_TASK_DURATION_MONTHS = 3
+
+
+def add_calendar_months(value: date, months: int) -> date:
+    month_index = value.month - 1 + months
+    year = value.year + month_index // 12
+    month = month_index % 12 + 1
+    day = min(value.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
 
 
 def plan_data_dir(root: Path, plan: str) -> Path:

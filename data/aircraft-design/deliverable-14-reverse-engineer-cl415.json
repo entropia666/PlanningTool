@@ -5,7 +5,8 @@
   "description": "Validate engineering methods with CL415 reverse engineering: estimated handling qualities, performance should match with Aircraft flight manual, simulator etc",
   "date": "2027-05-16",
   "predecessors": [
-    "gather-cl415-engineering-info"
+    "gather-cl415-engineering-info",
+    "validate-cl415-handling-qualities"
   ],
   "anchor": "gather-cl415-engineering-info",
   "group": "reference-aircraft",
@@ -16,5 +17,6 @@
     "concept-review",
     "reverse-engineering",
     "CL-415"
-  ]
+  ],
+  "row": 10
 }
