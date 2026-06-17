@@ -5,7 +5,6 @@
   "description": "Concept review deliverable — flight control law architecture drivers, including sensor types, acceptable degraded modes, and critical functions.",
   "date": "2027-05-16",
   "predecessors": [],
-  "group": "flight-control",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -18,5 +17,7 @@
     "sensor-types",
     "degraded-modes",
     "critical-functions"
-  ]
+  ],
+  "discipline": "handling-qualities",
+  "row": 7
 }

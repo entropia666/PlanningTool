@@ -5,8 +5,20 @@
   "description": "Preliminary design review deliverable — mission performance assessment including take-off, landing, and scooping field lengths and mission range.",
   "date": "2028-07-30",
   "predecessors": [],
-  "group": "mission-performance",
   "status": "planned",
-  "tags": ["aircraft-design", "deliverable", "preliminary-design", "mission-performance", "performance"],
-  "topics": ["take-off-field-length", "landing-field-length", "scooping-field-length", "mission-range"]
+  "tags": [
+    "aircraft-design",
+    "deliverable",
+    "preliminary-design",
+    "mission-performance",
+    "performance"
+  ],
+  "topics": [
+    "take-off-field-length",
+    "landing-field-length",
+    "scooping-field-length",
+    "mission-range"
+  ],
+  "discipline": "performance",
+  "row": 6
 }

@@ -562,7 +562,7 @@
       <span class="legend-item"><span class="legend-bar"></span> Task</span>
       <span class="legend-item"><span class="legend-diamond"></span> Milestone</span>
       <span class="legend-item"><span class="legend-circle"></span> Deliverable</span>
-      <span class="zoom-hint">Ctrl + scroll to zoom · Right-click chart for new task</span>
+      <span class="zoom-hint">Ctrl + scroll to zoom · Drag vertically to reorder subrows · Right-click chart for new task</span>
     </div>
     <span class="sync-status" id="sync-status">Loading…</span>
     <div class="zoom-controls">
@@ -626,6 +626,7 @@
     </div>
     <div class="ctx-section" id="ctx-chart-section">
       <button type="button" id="ctx-new-task">New task here</button>
+      <button type="button" id="ctx-new-deliverable">New deliverable here</button>
     </div>
   </div>
 
@@ -641,8 +642,32 @@
     const API = `/api/plans/${PLAN}`;
     const INTERNAL_KEYS = new Set(["_source_file", "_auto_row", "_mtime"]);
     const TOOLTIP_SKIP_KEYS = new Set([
-      "id", "type", "tags", "row", "group", "row_label", "anchor", "name",
+      "id", "type", "tags", "row", "discipline", "subrow", "group", "row_label", "anchor", "name", "assignee",
     ]);
+    const DISCIPLINES = [
+      "aerodynamic-design",
+      "aerodynamic-data",
+      "flight-loads",
+      "ground-loads",
+      "water-loads",
+      "aeroelastics",
+      "performance",
+      "handling-qualities",
+      "mass-and-cog",
+      "overall-aircraft-design",
+    ];
+    const DISCIPLINE_LABELS = {
+      "aerodynamic-design": "Aerodynamic design",
+      "aerodynamic-data": "Aerodynamic data",
+      "flight-loads": "Flight Loads",
+      "ground-loads": "Ground Loads",
+      "water-loads": "Water Loads",
+      "aeroelastics": "Aeroelastics",
+      "performance": "Performance",
+      "handling-qualities": "Handling qualities",
+      "mass-and-cog": "Mass and CoG",
+      "overall-aircraft-design": "Overall Aircraft Design",
+    };
     const SYNC_INTERVAL_MS = 3000;
 
     let ITEMS = [];
@@ -1153,10 +1178,15 @@
       return items.filter(item => item.type === "milestone");
     }
 
-    function itemRow(item) { return item.row ?? 0; }
+    function itemRow(item) {
+      if (item.discipline && DISCIPLINES.includes(item.discipline)) {
+        return DISCIPLINES.indexOf(item.discipline);
+      }
+      return item.row ?? 0;
+    }
 
     function itemsOnRow(row, rowable) {
-      return rowable.filter(item => item.row === row);
+      return rowable.filter(item => itemRow(item) === row);
     }
 
     function itemTimeRange(item) {
@@ -1180,7 +1210,7 @@
       return rangesOverlap(rangeA, rangeB);
     }
 
-    function assignSubrows(itemsOnRow) {
+    function assignSubrows(itemsOnRow, dragPreview = null) {
       const sorted = [...itemsOnRow].sort((a, b) => {
         const ta = itemTimeRange(a), tb = itemTimeRange(b);
         return ta.start - tb.start || ta.end - tb.end || a.id.localeCompare(b.id);
@@ -1194,12 +1224,27 @@
         subrows.set(item.id, lane);
       }
 
+      function laneForItem(item) {
+        if (dragPreview && dragPreview.id === item.id) return dragPreview.lane;
+        if (Number.isInteger(item.subrow)) return item.subrow;
+        return null;
+      }
+
+      for (const item of sorted) {
+        if (item.anchor) continue;
+        const lane = laneForItem(item);
+        if (lane !== null) placeInLane(item, lane);
+      }
+
       for (const item of sorted) {
         const anchorId = item.anchor;
         if (anchorId && subrows.has(anchorId)) {
           placeInLane(item, subrows.get(anchorId));
-          continue;
         }
+      }
+
+      for (const item of sorted) {
+        if (subrows.has(item.id)) continue;
         const range = itemTimeRange(item);
         let lane = lanes.findIndex(
           existing => !existing.some(
@@ -1219,17 +1264,19 @@
       return { subrows, laneCount: Math.max(lanes.length, 1) };
     }
 
-    function uniqueRows(rowable) {
-      return [...new Set(rowable.map(item => item.row))].sort((a, b) => a - b);
+    function disciplineRows() {
+      return DISCIPLINES.map((_, index) => index);
     }
 
     function buildRowLayout(rowable) {
-      const rows = uniqueRows(rowable);
+      const dragPreview = dragState?.mode === "subrow"
+        ? { id: dragState.id, lane: dragState.previewSubrow ?? dragState.origSubrow }
+        : null;
       const layout = {};
       let top = 0;
-      for (const row of rows) {
+      for (const row of disciplineRows()) {
         const onRow = itemsOnRow(row, rowable);
-        const { subrows, laneCount } = assignSubrows(onRow);
+        const { subrows, laneCount } = assignSubrows(onRow, dragPreview);
         const height = Math.max(ROW_HEIGHT, laneCount * MIN_LANE_HEIGHT);
         layout[row] = { top, height, laneCount, subrows, row };
         top += height;
@@ -1242,6 +1289,11 @@
       const lane = rowInfo.subrows.get(item.id) ?? 0;
       const laneHeight = rowInfo.height / rowInfo.laneCount;
       return rowInfo.top + lane * laneHeight + laneHeight / 2;
+    }
+
+    function laneAtY(y, rowInfo) {
+      const laneHeight = rowInfo.height / rowInfo.laneCount;
+      return Math.max(0, Math.floor((y - rowInfo.top) / laneHeight));
     }
 
     function rowAtY(y, layout) {
@@ -1273,12 +1325,9 @@
       return { x1, y1, x2, y2 };
     }
 
-    function rowLabel(row, rowable) {
-      const onRow = itemsOnRow(row, rowable);
-      const custom = onRow.find(item => item.row_label)?.row_label;
-      if (custom) return custom;
-      if (onRow.length === 1) return onRow[0].name;
-      return onRow.map(item => item.name).join(" · ");
+    function rowLabel(row) {
+      const discipline = DISCIPLINES[row];
+      return DISCIPLINE_LABELS[discipline] || discipline || `Row ${row}`;
     }
 
     // --- Selection & editor ---
@@ -1491,7 +1540,7 @@
       labelsColumn.querySelectorAll(".label-row").forEach(el => {
         const row = Number(el.dataset.row);
         const hasSelected = rowable
-          .filter(i => (i.row ?? 0) === row)
+          .filter(i => itemRow(i) === row)
           .some(i => i.id === selectedId);
         el.classList.toggle("selected", hasSelected);
       });
@@ -1566,6 +1615,11 @@
       return e.clientX - canvasRect.left + chartScroll.scrollLeft;
     }
 
+    function pointerCanvasY(e) {
+      const canvasRect = chartCanvas.getBoundingClientRect();
+      return e.clientY - canvasRect.top + chartScroll.scrollTop;
+    }
+
     function beginPendingDrag(e, item, mode) {
       const isTask = item.type === "task";
       pendingPointer = {
@@ -1580,6 +1634,27 @@
       };
       document.addEventListener("mousemove", onPointerMove);
       document.addEventListener("mouseup", onPointerUp);
+    }
+
+    function activateSubrowDrag() {
+      if (!pendingPointer) return;
+      const item = ITEMS.find(i => i.id === pendingPointer.id);
+      if (!item) return;
+      const row = itemRow(item);
+      const rowInfo = cachedLayout?.layout[row];
+      const origSubrow = Number.isInteger(item.subrow)
+        ? item.subrow
+        : (rowInfo?.subrows.get(item.id) ?? 0);
+      dragState = {
+        id: pendingPointer.id,
+        itemType: pendingPointer.itemType,
+        mode: "subrow",
+        origSubrow,
+        previewSubrow: origSubrow,
+        moved: false,
+      };
+      pendingPointer = null;
+      hideTooltip();
     }
 
     function activateDrag() {
@@ -1630,19 +1705,85 @@
       return false;
     }
 
+    function applySubrowDrag(item, y) {
+      const row = itemRow(item);
+      const rowInfo = cachedLayout?.layout[row];
+      if (!rowInfo) return;
+      let lane = laneAtY(y, rowInfo);
+      const maxLane = Math.max(rowInfo.laneCount - 1, dragState.origSubrow, lane);
+      lane = Math.max(0, Math.min(maxLane, lane));
+      dragState.previewSubrow = lane;
+      dragState.moved = lane !== dragState.origSubrow;
+    }
+
+    function subrowOccupant(row, lane, excludeId) {
+      const onRow = itemsOnRow(row, rowableItems(ITEMS));
+      const { subrows } = assignSubrows(onRow);
+      for (const other of onRow) {
+        if (other.id === excludeId) continue;
+        if (subrows.get(other.id) === lane) return other;
+      }
+      return null;
+    }
+
+    async function saveSubrowChange(item, origSubrow, targetLane) {
+      const row = itemRow(item);
+      const occupant = subrowOccupant(row, targetLane, item.id);
+      const payloads = [];
+      const savedIds = [];
+
+      item.subrow = targetLane;
+      payloads.push(stripInternal(item));
+      savedIds.push(item.id);
+
+      if (occupant) {
+        occupant.subrow = origSubrow;
+        payloads.push(stripInternal(occupant));
+        savedIds.push(occupant.id);
+      }
+
+      syncStatus.textContent = "Saving…";
+      for (const payload of payloads) {
+        const saved = await apiSend("PUT", `${API}/items/${payload.id}`, payload);
+        mergeItem(saved);
+      }
+      updateMtimesFromItems();
+      await loadItems();
+      render();
+      selectedId = item.id;
+      highlightSelection();
+      syncStatus.textContent = "Saved";
+    }
+
     function onPointerMove(e) {
       if (pendingPointer) {
         const dx = e.clientX - pendingPointer.clientX;
         const dy = e.clientY - pendingPointer.clientY;
-        if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) activateDrag();
+        if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+          if (
+            pendingPointer.mode === "move"
+            && (pendingPointer.itemType === "task" || pendingPointer.itemType === "deliverable")
+            && Math.abs(dy) > Math.abs(dx) * 1.25
+          ) {
+            activateSubrowDrag();
+          } else {
+            activateDrag();
+          }
+        }
       }
       if (!dragState) return;
 
-      const x = pointerCanvasX(e);
-      const deltaDays = Math.round((x - dragState.startX) / dayWidth);
-
       const item = ITEMS.find(i => i.id === dragState.id);
       if (!item || (item.type !== "task" && item.type !== "deliverable")) return;
+
+      if (dragState.mode === "subrow") {
+        applySubrowDrag(item, pointerCanvasY(e));
+        renderTimeline();
+        return;
+      }
+
+      const x = pointerCanvasX(e);
+      const deltaDays = Math.round((x - dragState.startX) / dayWidth);
 
       const beforeStart = item.type === "task" ? item.start : item.date;
       const beforeEnd = item.type === "task" ? item.end : null;
@@ -1671,8 +1812,29 @@
 
       if (!dragState) return;
 
-      const { id, origStart, origEnd, moved } = dragState;
+      const { id, origStart, origEnd, moved, mode, origSubrow, previewSubrow } = dragState;
       dragState = null;
+
+      if (mode === "subrow") {
+        if (!moved) {
+          const item = ITEMS.find(i => i.id === id);
+          if (item?.type === "task") scheduleTaskSelect(id);
+          else selectItem(id);
+          return;
+        }
+        const item = ITEMS.find(i => i.id === id);
+        if (!item) return;
+        try {
+          await saveSubrowChange(item, origSubrow, previewSubrow);
+        } catch (err) {
+          syncStatus.textContent = "Save failed";
+          syncStatus.classList.add("warn");
+          await loadItems();
+          render();
+          alert(`Failed to save subrow: ${err.message}`);
+        }
+        return;
+      }
 
       if (!moved) {
         const item = ITEMS.find(i => i.id === id);
@@ -1719,10 +1881,9 @@
     // --- Render ---
 
     function renderLabels(items, rowLayout, totalHeight) {
-      const rowable = rowableItems(items);
-      const rowsHtml = uniqueRows(rowable).map(row => {
+      const rowsHtml = disciplineRows().map(row => {
         const height = rowLayout[row].height;
-        return `<div class="label-row" data-row="${row}" style="height:${height}px">${escapeHtml(rowLabel(row, rowable))}</div>`;
+        return `<div class="label-row" data-row="${row}" style="height:${height}px">${escapeHtml(rowLabel(row))}</div>`;
       }).join("");
       labelsColumn.innerHTML = `<div class="labels-inner" style="min-height:${totalHeight}px">${rowsHtml}</div>`;
       labelsColumn.querySelectorAll(".label-row").forEach(el => bindLabelTooltip(el, el.textContent));
@@ -2224,6 +2385,7 @@
         const saved = await apiSend("POST", `${API}/items/new-task`, {
           start: pos.date,
           row: pos.row,
+          discipline: DISCIPLINES[pos.row] ?? DISCIPLINES[0],
         });
         mergeItem(saved);
         await loadItems();
@@ -2233,6 +2395,29 @@
       } catch (err) {
         syncStatus.textContent = "Create failed";
         alert(`Failed to create task: ${err.message}`);
+      }
+    });
+
+    document.getElementById("ctx-new-deliverable").addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const pos = ctxClickPos;
+      hideContextMenu();
+      if (!pos) return;
+      try {
+        syncStatus.textContent = "Creating…";
+        const saved = await apiSend("POST", `${API}/items/new-deliverable`, {
+          date: pos.date,
+          row: pos.row,
+          discipline: DISCIPLINES[pos.row] ?? DISCIPLINES[0],
+        });
+        mergeItem(saved);
+        await loadItems();
+        render();
+        selectItem(saved.id);
+        syncStatus.textContent = "Created";
+      } catch (err) {
+        syncStatus.textContent = "Create failed";
+        alert(`Failed to create deliverable: ${err.message}`);
       }
     });
 

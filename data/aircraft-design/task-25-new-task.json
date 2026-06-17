@@ -1,7 +1,7 @@
 {
-  "id": "new-task-1781728826435",
+  "id": "new-task-1781730505845",
   "type": "task",
-  "name": "Preliminary flight loads for primary structure",
+  "name": "Preliminary ground loads",
   "description": "",
   "start": "2026-12-23",
   "end": "2027-02-27",
@@ -10,6 +10,6 @@
   ],
   "status": "planned",
   "tags": [],
-  "row": 2,
-  "discipline": "flight-loads"
+  "row": 3,
+  "discipline": "ground-loads"
 }

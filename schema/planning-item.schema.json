@@ -64,7 +64,28 @@
     },
     "row": {
       "type": "integer",
-      "description": "Row index (0-based). Items with the same row share one lane."
+      "description": "Row index (0-based). Derived from discipline when discipline is set."
+    },
+    "discipline": {
+      "type": "string",
+      "enum": [
+        "aerodynamic-design",
+        "aerodynamic-data",
+        "flight-loads",
+        "ground-loads",
+        "water-loads",
+        "aeroelastics",
+        "performance",
+        "handling-qualities",
+        "mass-and-cog",
+        "overall-aircraft-design"
+      ],
+      "description": "Engineering discipline category; determines the Gantt row."
+    },
+    "subrow": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Optional manual lane index within a discipline row."
     },
     "group": {
       "type": "string",

@@ -8,7 +8,6 @@
     "flight-loads",
     "ground-water-loads"
   ],
-  "group": "loads",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -23,5 +22,7 @@
     "vertical-tail",
     "horizontal-tail",
     "pylon"
-  ]
+  ],
+  "discipline": "flight-loads",
+  "row": 2
 }

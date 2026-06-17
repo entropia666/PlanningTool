@@ -14,6 +14,74 @@ ROWABLE_TYPES = frozenset({"task", "milestone", "deliverable"})
 ROW_ASSIGN_TYPES = frozenset({"task", "deliverable"})
 INTERNAL_FIELDS = frozenset({"_source_file", "_auto_row", "_mtime"})
 
+DISCIPLINES: list[str] = [
+    "aerodynamic-design",
+    "aerodynamic-data",
+    "flight-loads",
+    "ground-loads",
+    "water-loads",
+    "aeroelastics",
+    "performance",
+    "handling-qualities",
+    "mass-and-cog",
+    "overall-aircraft-design",
+]
+
+DISCIPLINE_LABELS: dict[str, str] = {
+    "aerodynamic-design": "Aerodynamic design",
+    "aerodynamic-data": "Aerodynamic data",
+    "flight-loads": "Flight Loads",
+    "ground-loads": "Ground Loads",
+    "water-loads": "Water Loads",
+    "aeroelastics": "Aeroelastics",
+    "performance": "Performance",
+    "handling-qualities": "Handling qualities",
+    "mass-and-cog": "Mass and CoG",
+    "overall-aircraft-design": "Overall Aircraft Design",
+}
+
+ITEM_DISCIPLINE_BY_ID: dict[str, str] = {
+    "flaps-loft-kinematics": "aerodynamic-design",
+    "fairings-loft-design": "aerodynamic-design",
+    "new-task-1781729174012": "aerodynamic-design",
+    "new-task-1781727639299": "aerodynamic-design",
+    "primary-structure-external-loft": "aerodynamic-design",
+    "components-external-loft": "aerodynamic-design",
+    "flaps-control-surfaces-kinematics": "aerodynamic-design",
+    "planform-freeze": "aerodynamic-design",
+    "wind-tunnel-model-test-analysis": "aerodynamic-data",
+    "gather-cl415-engineering-info": "aerodynamic-data",
+    "CL 415 Aero data creation": "aerodynamic-data",
+    "wind-tunnel-validated-aero-data": "aerodynamic-data",
+    "reverse-engineer-cl415": "aerodynamic-data",
+    "new-task-1781729592942": "aerodynamic-data",
+    "flight-loads": "flight-loads",
+    "components-loads": "flight-loads",
+    "new-task-1781728461373": "flight-loads",
+    "new-task-1781728826435": "flight-loads",
+    "primary-structure-external-loads": "flight-loads",
+    "components-external-loads": "flight-loads",
+    "ground-water-loads": "ground-loads",
+    "validate-cl415-performance": "performance",
+    "mission-performance": "performance",
+    "propulsive-performance": "performance",
+    "new-task-1781727214306": "performance",
+    "new-task-1781727809427": "performance",
+    "new-task-1781729363543": "performance",
+    "handling-qualities-actuator": "handling-qualities",
+    "validate-cl415-handling-qualities": "handling-qualities",
+    "handling-qualities-compliance": "handling-qualities",
+    "actuator-max-capability": "handling-qualities",
+    "flight-control-law-architecture-drivers": "handling-qualities",
+    "new-task-1781727460159": "handling-qualities",
+    "new-task-1781727940372": "handling-qualities",
+    "new-task-1781727966427": "handling-qualities",
+    "new-task-1781728093797": "handling-qualities",
+    "new-task-1781728931019": "handling-qualities",
+    "mass-allowance": "mass-and-cog",
+    "mass-cog-envelope": "mass-and-cog",
+}
+
 TYPE_PREFIXES = {
     "task": "task",
     "milestone": "milestone",
@@ -80,84 +148,71 @@ def strip_internal_fields(item: dict[str, Any]) -> dict[str, Any]:
     return {k: v for k, v in item.items() if k not in INTERNAL_FIELDS}
 
 
-def assign_rows(items: list[dict[str, Any]]) -> None:
-    """Assign row indices to tasks and deliverables; milestones render on the timeline header."""
-    rowable = [item for item in items if item.get("type") in ROW_ASSIGN_TYPES]
-    if not rowable:
-        return
+def discipline_index(discipline: str) -> int:
+    try:
+        return DISCIPLINES.index(discipline)
+    except ValueError:
+        return 0
 
-    by_id = {item["id"]: item for item in items}
-    memo: dict[str, int] = {}
 
-    def task_depth(item_id: str, visiting: set[str]) -> int:
-        if item_id in visiting:
-            return 0
-        if item_id in memo:
-            return memo[item_id]
-        visiting.add(item_id)
-        item = by_id[item_id]
-        preds = [
-            p
-            for p in item.get("predecessors", [])
-            if by_id.get(p, {}).get("type") == "task"
+def infer_discipline(item: dict[str, Any]) -> str:
+    if item.get("discipline") in DISCIPLINES:
+        return str(item["discipline"])
+
+    item_id = item.get("id", "")
+    if item_id in ITEM_DISCIPLINE_BY_ID:
+        return ITEM_DISCIPLINE_BY_ID[item_id]
+
+    row = item.get("row")
+    if isinstance(row, int) and 0 <= row < len(DISCIPLINES):
+        return DISCIPLINES[row]
+
+    haystack = " ".join(
+        [
+            item_id,
+            str(item.get("name", "")),
+            str(item.get("group", "")),
+            " ".join(str(t) for t in item.get("tags", [])),
         ]
-        value = max((task_depth(p, visiting) for p in preds), default=-1) + 1
-        visiting.remove(item_id)
-        memo[item_id] = value
-        return value
+    ).lower()
 
-    group_to_row: dict[str, int] = {}
-    next_group_row = 0
-    for item in rowable:
-        if item.get("anchor"):
+    rules: list[tuple[tuple[str, ...], str]] = [
+        (("mass", "cog", "weight"), "mass-and-cog"),
+        (("handling", "actuator", "flight-control"), "handling-qualities"),
+        (("performance", "propulsion", "mission-performance"), "performance"),
+        (("aeroelastic",), "aeroelastics"),
+        (("water load", "water-load"), "water-loads"),
+        (("ground load", "ground-load"), "ground-loads"),
+        (("flight load", "loads", "load"), "flight-loads"),
+        (("wind-tunnel", "aero data", "reverse-engineer", "reference-aircraft"), "aerodynamic-data"),
+        (("loft", "kinematic", "planform", "fairing", "aero shape"), "aerodynamic-design"),
+    ]
+    for keywords, discipline in rules:
+        if any(keyword in haystack for keyword in keywords):
+            return discipline
+
+    return "aerodynamic-design"
+
+
+def assign_rows(items: list[dict[str, Any]]) -> None:
+    """Map each task/deliverable to a fixed discipline row."""
+    by_id = {item["id"]: item for item in items if "id" in item}
+
+    for item in items:
+        if item.get("type") not in ROW_ASSIGN_TYPES:
             continue
-        if "group" in item and "row" not in item:
-            key = str(item["group"])
-            if key not in group_to_row:
-                group_to_row[key] = next_group_row
-                next_group_row += 1
-            item["row"] = group_to_row[key]
 
-    for item in rowable:
-        if item.get("anchor") or "row" in item:
-            continue
-        if item["type"] == "task":
-            item["row"] = task_depth(item["id"], set())
-            item["_auto_row"] = True
-
-    occupied = {item["row"] for item in rowable if "row" in item and not item.get("_auto_row")}
-    for item in sorted(
-        (i for i in rowable if i.get("_auto_row")),
-        key=lambda i: (i["row"], i["id"]),
-    ):
-        row = item["row"]
-        while row in occupied:
-            row += 1
-        item["row"] = row
-        occupied.add(row)
-
-    for item in rowable:
-        if item.get("anchor") or "row" in item:
-            continue
-        if item["type"] == "deliverable":
-            row = 0
-            while row in occupied:
-                row += 1
-            item["row"] = row
-            occupied.add(row)
-
-    for item in rowable:
         anchor_id = item.get("anchor")
-        if anchor_id and anchor_id in by_id and "row" in by_id[anchor_id]:
-            item["row"] = by_id[anchor_id]["row"]
+        if anchor_id and anchor_id in by_id:
+            anchor = by_id[anchor_id]
+            discipline = anchor.get("discipline")
+            if discipline not in DISCIPLINES:
+                discipline = infer_discipline(anchor)
+            item["discipline"] = discipline
+        elif item.get("discipline") not in DISCIPLINES:
+            item["discipline"] = infer_discipline(item)
 
-    for item in rowable:
-        item.pop("_auto_row", None)
-
-    unique_rows = sorted({item["row"] for item in rowable})
-    row_map = {old: new for new, old in enumerate(unique_rows)}
-    for item in rowable:
-        item["row"] = row_map[item["row"]]
+        item["row"] = discipline_index(item["discipline"])
 
 
 def item_end_date(item: dict[str, Any]) -> date:
@@ -222,8 +277,18 @@ def read_item_file(path: Path) -> dict[str, Any]:
     return item
 
 
-def new_task_template(start: str, end: str, row: int | None = None) -> dict[str, Any]:
+def new_task_template(
+    start: str,
+    end: str,
+    discipline: str | None = None,
+    row: int | None = None,
+) -> dict[str, Any]:
     temp_id = f"new-task-{int(time.time() * 1000)}"
+    if discipline not in DISCIPLINES:
+        if row is not None and 0 <= row < len(DISCIPLINES):
+            discipline = DISCIPLINES[row]
+        else:
+            discipline = DISCIPLINES[0]
     item: dict[str, Any] = {
         "id": temp_id,
         "type": "task",
@@ -231,12 +296,38 @@ def new_task_template(start: str, end: str, row: int | None = None) -> dict[str,
         "description": "",
         "start": start,
         "end": end,
+        "discipline": discipline,
+        "row": discipline_index(discipline),
         "predecessors": [],
         "status": "planned",
         "tags": [],
     }
-    if row is not None:
-        item["row"] = row
+    return item
+
+
+def new_deliverable_template(
+    date: str,
+    discipline: str | None = None,
+    row: int | None = None,
+) -> dict[str, Any]:
+    temp_id = f"new-deliverable-{int(time.time() * 1000)}"
+    if discipline not in DISCIPLINES:
+        if row is not None and 0 <= row < len(DISCIPLINES):
+            discipline = DISCIPLINES[row]
+        else:
+            discipline = DISCIPLINES[0]
+    item: dict[str, Any] = {
+        "id": temp_id,
+        "type": "deliverable",
+        "name": "New deliverable",
+        "description": "",
+        "date": date,
+        "discipline": discipline,
+        "row": discipline_index(discipline),
+        "predecessors": [],
+        "status": "planned",
+        "tags": [],
+    }
     return item
 
 

@@ -8,8 +8,6 @@
   "predecessors": [
     "gather-cl415-engineering-info"
   ],
-  "group": "aerodynamics",
-  "row_label": "Aerodynamics",
   "status": "planned",
   "assignee": "Flight Physics",
   "tags": [
@@ -17,5 +15,6 @@
     "CL 415",
     "flight-physics"
   ],
-  "row": 10
+  "row": 1,
+  "discipline": "aerodynamic-data"
 }

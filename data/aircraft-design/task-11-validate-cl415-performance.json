@@ -9,8 +9,6 @@
     "CL 415 Aero data creation",
     "new-task-1781727809427"
   ],
-  "group": "mission-performance",
-  "row_label": "Mission performance",
   "status": "planned",
   "assignee": "Flight Physics",
   "tags": [
@@ -21,5 +19,6 @@
     "CL-415",
     "flight-physics"
   ],
-  "row": 0
+  "row": 6,
+  "discipline": "performance"
 }

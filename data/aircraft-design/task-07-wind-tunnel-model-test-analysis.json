@@ -8,8 +8,6 @@
   "predecessors": [
     "concept-review"
   ],
-  "group": "aerodynamics",
-  "row_label": "Aerodynamics",
   "status": "planned",
   "assignee": "Flight Physics",
   "tags": [
@@ -18,5 +16,7 @@
     "aerodynamics",
     "wind-tunnel",
     "flight-physics"
-  ]
+  ],
+  "discipline": "aerodynamic-data",
+  "row": 1
 }

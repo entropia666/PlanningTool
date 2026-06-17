@@ -9,7 +9,6 @@
     "validate-cl415-handling-qualities"
   ],
   "anchor": "gather-cl415-engineering-info",
-  "group": "reference-aircraft",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -18,5 +17,6 @@
     "reverse-engineering",
     "CL-415"
   ],
-  "row": 10
+  "row": 1,
+  "discipline": "overall-aircraft-design"
 }

@@ -6,9 +6,11 @@
   "start": "2027-03-22",
   "end": "2027-05-14",
   "predecessors": [
-    "new-task-1781729592942"
+    "new-task-1781729592942",
+    "new-deliverable-1781732212078"
   ],
   "status": "planned",
   "tags": [],
-  "row": 2
+  "row": 7,
+  "discipline": "handling-qualities"
 }

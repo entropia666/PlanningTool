@@ -450,8 +450,32 @@
     const SUBROW_PROXIMITY_DAYS = 30;
     const MS_PER_DAY = 86400000;
     const TOOLTIP_SKIP_KEYS = new Set([
-      "id", "type", "tags", "row", "group", "row_label", "anchor", "name",
+      "id", "type", "tags", "row", "discipline", "subrow", "group", "row_label", "anchor", "name", "assignee",
     ]);
+    const DISCIPLINES = [
+      "aerodynamic-design",
+      "aerodynamic-data",
+      "flight-loads",
+      "ground-loads",
+      "water-loads",
+      "aeroelastics",
+      "performance",
+      "handling-qualities",
+      "mass-and-cog",
+      "overall-aircraft-design",
+    ];
+    const DISCIPLINE_LABELS = {
+      "aerodynamic-design": "Aerodynamic design",
+      "aerodynamic-data": "Aerodynamic data",
+      "flight-loads": "Flight Loads",
+      "ground-loads": "Ground Loads",
+      "water-loads": "Water Loads",
+      "aeroelastics": "Aeroelastics",
+      "performance": "Performance",
+      "handling-qualities": "Handling qualities",
+      "mass-and-cog": "Mass and CoG",
+      "overall-aircraft-design": "Overall Aircraft Design",
+    };
 
     let dayWidth = BASE_DAY_WIDTH;
     let viewBounds = null;
@@ -706,11 +730,14 @@
     }
 
     function itemRow(item) {
+      if (item.discipline && DISCIPLINES.includes(item.discipline)) {
+        return DISCIPLINES.indexOf(item.discipline);
+      }
       return item.row ?? 0;
     }
 
     function itemsOnRow(row, rowable) {
-      return rowable.filter(item => item.row === row);
+      return rowable.filter(item => itemRow(item) === row);
     }
 
     function itemTimeRange(item) {
@@ -753,21 +780,26 @@
       }
 
       for (const item of sorted) {
+        if (item.anchor) continue;
+        if (Number.isInteger(item.subrow)) placeInLane(item, item.subrow);
+      }
+
+      for (const item of sorted) {
         const anchorId = item.anchor;
         if (anchorId && subrows.has(anchorId)) {
           placeInLane(item, subrows.get(anchorId));
-          continue;
         }
+      }
 
+      for (const item of sorted) {
+        if (subrows.has(item.id)) continue;
         const range = itemTimeRange(item);
         let lane = lanes.findIndex(
           existing => !existing.some(
             entry => rangesConflict(range, item.type, entry.range, entry.type)
           )
         );
-        if (lane === -1) {
-          lane = lanes.length;
-        }
+        if (lane === -1) lane = lanes.length;
         placeInLane(item, lane);
       }
 
@@ -782,12 +814,15 @@
       return { subrows, laneCount: Math.max(lanes.length, 1) };
     }
 
+    function disciplineRows() {
+      return DISCIPLINES.map((_, index) => index);
+    }
+
     function buildRowLayout(rowable) {
-      const rows = uniqueRows(rowable);
       const layout = {};
       let top = 0;
 
-      for (const row of rows) {
+      for (const row of disciplineRows()) {
         const onRow = itemsOnRow(row, rowable);
         const { subrows, laneCount } = assignSubrows(onRow);
         const height = Math.max(ROW_HEIGHT, laneCount * MIN_LANE_HEIGHT);
@@ -834,23 +869,15 @@
       return { x1, y1, x2, y2 };
     }
 
-    function uniqueRows(rowable) {
-      return [...new Set(rowable.map(item => item.row))].sort((a, b) => a - b);
-    }
-
-    function rowLabel(row, rowable) {
-      const onRow = itemsOnRow(row, rowable);
-      const custom = onRow.find(item => item.row_label)?.row_label;
-      if (custom) return custom;
-      if (onRow.length === 1) return onRow[0].name;
-      return onRow.map(item => item.name).join(" · ");
+    function rowLabel(row) {
+      const discipline = DISCIPLINES[row];
+      return DISCIPLINE_LABELS[discipline] || discipline || `Row ${row}`;
     }
 
     function renderLabels(items, rowLayout, totalHeight) {
-      const rowable = rowableItems(items);
-      const rowsHtml = uniqueRows(rowable).map(row => {
+      const rowsHtml = disciplineRows().map(row => {
         const height = rowLayout[row].height;
-        const text = rowLabel(row, rowable);
+        const text = rowLabel(row);
         return `<div class="label-row" data-row="${row}" style="height:${height}px">${escapeHtml(text)}</div>`;
       }).join("");
       labelsColumn.innerHTML = `<div class="labels-inner" style="min-height:${totalHeight}px">${rowsHtml}</div>`;

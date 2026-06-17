@@ -8,8 +8,6 @@
   "predecessors": [
     "new-task-1781728461373"
   ],
-  "group": "loads",
-  "row_label": "Loads analysis",
   "status": "planned",
   "assignee": "Flight Physics",
   "tags": [
@@ -18,5 +16,6 @@
     "loads",
     "flight-physics"
   ],
-  "row": 3
+  "row": 2,
+  "discipline": "flight-loads"
 }

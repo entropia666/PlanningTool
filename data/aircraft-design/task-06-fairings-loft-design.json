@@ -6,8 +6,6 @@
   "start": "2028-05-06",
   "end": "2028-10-13",
   "predecessors": [],
-  "group": "fairings-loft",
-  "row_label": "Fairings loft",
   "status": "planned",
   "assignee": "Aerodynamics",
   "tags": [
@@ -16,5 +14,6 @@
     "loft",
     "fairings"
   ],
-  "row": 4
+  "row": 0,
+  "discipline": "aerodynamic-design"
 }

@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781730549221",
+  "type": "task",
+  "name": "Preliminary water loads",
+  "description": "",
+  "start": "2026-12-24",
+  "end": "2027-02-28",
+  "predecessors": [
+    "new-task-1781730602764"
+  ],
+  "status": "planned",
+  "tags": [],
+  "row": 4,
+  "discipline": "water-loads"
+}

@@ -3,12 +3,14 @@
   "type": "task",
   "name": "Aero data for HQ, Perform",
   "description": "",
-  "start": "2027-01-02",
-  "end": "2027-03-20",
+  "start": "2027-01-23",
+  "end": "2027-03-13",
   "predecessors": [
     "new-task-1781729174012"
   ],
   "status": "planned",
   "tags": [],
-  "row": 9
+  "row": 1,
+  "discipline": "aerodynamic-data",
+  "subrow": 0
 }

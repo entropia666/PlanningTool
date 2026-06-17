@@ -8,7 +8,6 @@
     "components-loads",
     "ground-water-loads"
   ],
-  "group": "loads",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -24,5 +23,7 @@
     "engine",
     "landing-gear",
     "water-skid"
-  ]
+  ],
+  "discipline": "flight-loads",
+  "row": 2
 }

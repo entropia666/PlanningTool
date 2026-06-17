@@ -5,7 +5,15 @@
   "description": "Preliminary design review deliverable — aircraft mass and centre-of-gravity envelope across the operational and design spectrum.",
   "date": "2028-07-30",
   "predecessors": [],
-  "group": "mass",
   "status": "planned",
-  "tags": ["aircraft-design", "deliverable", "preliminary-design", "mass", "weight", "cog"]
+  "tags": [
+    "aircraft-design",
+    "deliverable",
+    "preliminary-design",
+    "mass",
+    "weight",
+    "cog"
+  ],
+  "discipline": "mass-and-cog",
+  "row": 8
 }

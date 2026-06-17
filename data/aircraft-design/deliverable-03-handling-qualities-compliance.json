@@ -7,7 +7,6 @@
   "predecessors": [
     "new-task-1781727460159"
   ],
-  "group": "handling-qualities",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -20,5 +19,6 @@
     "CS-25",
     "MIL-spec"
   ],
-  "row": 2
+  "row": 7,
+  "discipline": "handling-qualities"
 }

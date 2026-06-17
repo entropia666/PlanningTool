@@ -5,7 +5,6 @@
   "description": "Joint definition phase deliverable — mass allowance budget allocated to each component, covering primary structure, components, systems, propulsion, landing gear, and other major items.",
   "date": "2028-10-31",
   "predecessors": [],
-  "group": "mass",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -29,5 +28,6 @@
     "actuators",
     "systems"
   ],
-  "row": 6
+  "row": 8,
+  "discipline": "mass-and-cog"
 }

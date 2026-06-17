@@ -11,8 +11,6 @@
     "new-task-1781727966427",
     "new-task-1781727940372"
   ],
-  "group": "handling-qualities",
-  "row_label": "Handling qualities / actuator",
   "status": "planned",
   "assignee": "Flight Physics",
   "tags": [
@@ -22,5 +20,6 @@
     "CL-415",
     "flight-physics"
   ],
-  "row": 2
+  "row": 7,
+  "discipline": "handling-qualities"
 }

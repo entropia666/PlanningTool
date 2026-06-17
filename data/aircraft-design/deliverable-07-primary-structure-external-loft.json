@@ -7,7 +7,6 @@
   "predecessors": [
     "fairings-loft-design"
   ],
-  "group": "primary-structure-loft",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -24,5 +23,6 @@
     "horizontal-tail",
     "pylon"
   ],
-  "row": 4
+  "row": 0,
+  "discipline": "aerodynamic-design"
 }

@@ -4,9 +4,10 @@
   "name": "F100 aero shape design",
   "description": "",
   "start": "2026-10-02",
-  "end": "2026-12-23",
+  "end": "2027-01-22",
   "predecessors": [],
   "status": "planned",
   "tags": [],
-  "row": 9
+  "row": 0,
+  "discipline": "aerodynamic-design"
 }

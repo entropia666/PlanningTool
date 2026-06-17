@@ -4,9 +4,22 @@
   "name": "Flaps and control surfaces kinematics",
   "description": "Joint definition phase deliverable — kinematic definition for flaps and control surfaces, including hinge lines, deflection ranges, and motion envelopes.",
   "date": "2028-10-30",
-  "predecessors": ["flaps-loft-kinematics"],
-  "group": "flaps-loft-kinematics",
+  "predecessors": [
+    "flaps-loft-kinematics"
+  ],
   "status": "planned",
-  "tags": ["aircraft-design", "deliverable", "joint-definition", "kinematics", "flaps", "control-surfaces"],
-  "components": ["flaps", "control-surfaces"]
+  "tags": [
+    "aircraft-design",
+    "deliverable",
+    "joint-definition",
+    "kinematics",
+    "flaps",
+    "control-surfaces"
+  ],
+  "components": [
+    "flaps",
+    "control-surfaces"
+  ],
+  "discipline": "aerodynamic-design",
+  "row": 0
 }

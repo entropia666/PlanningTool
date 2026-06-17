@@ -6,8 +6,6 @@
   "start": "2028-07-07",
   "end": "2028-10-01",
   "predecessors": [],
-  "group": "handling-qualities",
-  "row_label": "Handling qualities / actuator",
   "status": "planned",
   "assignee": "Flight Physics",
   "tags": [
@@ -16,5 +14,7 @@
     "handling-qualities",
     "actuator",
     "flight-physics"
-  ]
+  ],
+  "discipline": "handling-qualities",
+  "row": 7
 }

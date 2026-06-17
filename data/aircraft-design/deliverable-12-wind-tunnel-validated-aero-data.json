@@ -8,7 +8,6 @@
     "wind-tunnel-model-test-analysis"
   ],
   "anchor": "wind-tunnel-model-test-analysis",
-  "group": "aerodynamics",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -16,5 +15,8 @@
     "preliminary-design",
     "aerodynamics",
     "wind-tunnel"
-  ]
+  ],
+  "discipline": "aerodynamic-data",
+  "row": 1,
+  "subrow": 1
 }

@@ -8,7 +8,6 @@
     "flaps-loft-kinematics",
     "fairings-loft-design"
   ],
-  "group": "fairings-loft",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -23,5 +22,7 @@
     "flaps",
     "fairings",
     "water-skid"
-  ]
+  ],
+  "discipline": "aerodynamic-design",
+  "row": 0
 }

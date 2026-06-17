@@ -11,6 +11,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from plan_logic import (
+    DISCIPLINES,
     INTERNAL_FIELDS,
     NEW_TASK_DURATION_MONTHS,
     add_calendar_months,
@@ -21,6 +22,7 @@ from plan_logic import (
     format_date,
     load_items,
     make_filename,
+    new_deliverable_template,
     new_task_template,
     parse_date,
     plan_data_dir,
@@ -226,9 +228,44 @@ def create_app(default_plan: str = "aircraft-design") -> FastAPI:
 
         start = parse_date(start_str)
         end = add_calendar_months(start, NEW_TASK_DURATION_MONTHS)
-        item = new_task_template(format_date(start), format_date(end), row)
+        discipline = body.get("discipline")
+        if discipline not in DISCIPLINES:
+            discipline = None
+        item = new_task_template(
+            format_date(start),
+            format_date(end),
+            discipline=discipline,
+            row=row,
+        )
         directory = data_dir(plan)
         filename = make_filename(directory, "task", item["name"])
+        path = directory / filename
+        write_item_file(path, item)
+        saved = read_item_file(path)
+        assign_rows([saved])
+        return JSONResponse(saved, status_code=201)
+
+    @app.post("/api/plans/{plan}/items/new-deliverable")
+    async def create_deliverable_at_position(plan: str, request: Request) -> JSONResponse:
+        """Create a new deliverable at a given date/row (right-click on chart)."""
+        body = await request.json()
+        date_str = body.get("date") or body.get("start")
+        row = body.get("row")
+        if not date_str:
+            raise HTTPException(status_code=400, detail="'date' required")
+
+        discipline = body.get("discipline")
+        if discipline not in DISCIPLINES:
+            discipline = None
+        item = new_deliverable_template(
+            date_str,
+            discipline=discipline,
+            row=row,
+        )
+        directory = data_dir(plan)
+        items = load_items(directory)
+        snap_deliverable_to_milestone(item, items)
+        filename = make_filename(directory, "deliverable", item["name"])
         path = directory / filename
         write_item_file(path, item)
         saved = read_item_file(path)
