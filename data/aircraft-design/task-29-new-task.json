@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781732633772",
+  "type": "task",
+  "name": "Aero data for HQ, Perfo",
+  "description": "",
+  "start": "2027-07-27",
+  "end": "2027-09-10",
+  "discipline": "aerodynamic-data",
+  "row": 1,
+  "predecessors": [
+    "new-task-1781732510582"
+  ],
+  "status": "planned",
+  "tags": []
+}

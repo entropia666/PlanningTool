@@ -18,5 +18,6 @@
     "flight-physics"
   ],
   "discipline": "aerodynamic-data",
-  "row": 1
+  "row": 1,
+  "subrow": 1
 }

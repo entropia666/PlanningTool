@@ -4,7 +4,7 @@
   "name": "Gather CL 415 engineering information (AFM, simulator session, geometry etc)",
   "description": "Collect reference data for CL-415 reverse engineering — AFM, simulator session outputs, geometry (3d scan for example), and related engineering documentation.",
   "start": "2026-10-01",
-  "end": "2027-01-31",
+  "end": "2027-01-28",
   "predecessors": [
     "kickoff"
   ],
@@ -17,5 +17,6 @@
     "CL-415"
   ],
   "discipline": "aerodynamic-data",
-  "row": 1
+  "row": 1,
+  "subrow": 0
 }
