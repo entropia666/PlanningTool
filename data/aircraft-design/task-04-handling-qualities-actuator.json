@@ -5,7 +5,7 @@
   "description": "Handling qualities manoeuvres and control authority assessment to drive actuator force and stroke requirements.",
   "start": "2028-04-01",
   "end": "2028-10-15",
-  "predecessors": ["preliminary-design-review"],
+  "predecessors": [],
   "group": "handling-qualities",
   "row_label": "Handling qualities / actuator",
   "status": "planned",
