@@ -82,7 +82,13 @@ def create_app(default_plan: str = "aircraft-design") -> FastAPI:
             template.replace("{{TITLE}}", "Aircraft Design")
             .replace("{{DEFAULT_PLAN}}", default_plan)
         )
-        return HTMLResponse(html)
+        return HTMLResponse(
+            html,
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+            },
+        )
 
     @app.get("/api/plans/{plan}/items")
     async def list_items(plan: str) -> JSONResponse:

@@ -6,7 +6,8 @@
   "start": "2028-05-22",
   "end": "2028-07-16",
   "predecessors": [
-    "wind-tunnel-validated-aero-data"
+    "wind-tunnel-validated-aero-data",
+    "new-task-1781811366564"
   ],
   "status": "planned",
   "tags": [],

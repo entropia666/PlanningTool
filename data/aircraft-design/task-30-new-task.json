@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781808574675",
+  "type": "task",
+  "name": "Tails final sizing",
+  "description": "",
+  "start": "2027-09-23",
+  "end": "2027-11-12",
+  "discipline": "handling-qualities",
+  "row": 7,
+  "predecessors": [
+    "new-task-1781808801521"
+  ],
+  "status": "planned",
+  "tags": []
+}

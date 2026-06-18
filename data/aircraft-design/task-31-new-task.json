@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781808801521",
+  "type": "task",
+  "name": "Evaluate F100 handling qualities",
+  "description": "",
+  "start": "2027-07-28",
+  "end": "2027-09-10",
+  "discipline": "handling-qualities",
+  "row": 7,
+  "predecessors": [
+    "new-task-1781732633772"
+  ],
+  "status": "planned",
+  "tags": []
+}

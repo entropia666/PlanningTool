@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781811298993",
+  "type": "task",
+  "name": "Primary Control surfaces shape design",
+  "description": "",
+  "start": "2028-01-30",
+  "end": "2028-03-22",
+  "discipline": "aerodynamic-design",
+  "row": 0,
+  "predecessors": [
+    "new-task-1781727639299"
+  ],
+  "status": "planned",
+  "tags": []
+}

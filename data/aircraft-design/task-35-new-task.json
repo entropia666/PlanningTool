@@ -1,0 +1,16 @@
+{
+  "id": "new-task-1781811366564",
+  "type": "task",
+  "name": "Aero data for HQ, Perfo, Loads",
+  "description": "",
+  "start": "2028-03-25",
+  "end": "2028-05-20",
+  "discipline": "aerodynamic-data",
+  "row": 1,
+  "predecessors": [
+    "new-task-1781811298993"
+  ],
+  "status": "planned",
+  "tags": [],
+  "subrow": 3
+}

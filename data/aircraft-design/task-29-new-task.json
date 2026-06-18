@@ -3,8 +3,8 @@
   "type": "task",
   "name": "Aero data for HQ, Perfo",
   "description": "",
-  "start": "2027-07-27",
-  "end": "2027-09-10",
+  "start": "2027-05-29",
+  "end": "2027-07-24",
   "discipline": "aerodynamic-data",
   "row": 1,
   "predecessors": [

@@ -562,7 +562,7 @@
       <span class="legend-item"><span class="legend-bar"></span> Task</span>
       <span class="legend-item"><span class="legend-diamond"></span> Milestone</span>
       <span class="legend-item"><span class="legend-circle"></span> Deliverable</span>
-      <span class="zoom-hint">Ctrl + scroll to zoom · Drag vertically to reorder subrows · Right-click chart for new task</span>
+      <span class="zoom-hint">Ctrl + scroll to zoom · Drag vertically to reorder subrows · Right-click chart to create items</span>
     </div>
     <span class="sync-status" id="sync-status">Loading…</span>
     <div class="zoom-controls">
@@ -2240,6 +2240,19 @@
       contextMenu.style.left = `${e.clientX}px`;
       contextMenu.style.top = `${e.clientY}px`;
       contextMenu.classList.add("visible");
+      requestAnimationFrame(() => {
+        const rect = contextMenu.getBoundingClientRect();
+        let left = e.clientX;
+        let top = e.clientY;
+        if (rect.right > window.innerWidth - 8) {
+          left = Math.max(8, window.innerWidth - rect.width - 8);
+        }
+        if (rect.bottom > window.innerHeight - 8) {
+          top = Math.max(8, window.innerHeight - rect.height - 8);
+        }
+        contextMenu.style.left = `${left}px`;
+        contextMenu.style.top = `${top}px`;
+      });
     }
 
     function showItemContextMenu(e, itemId) {

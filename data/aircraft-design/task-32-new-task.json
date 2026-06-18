@@ -1,0 +1,13 @@
+{
+  "id": "new-task-1781811037382",
+  "type": "task",
+  "name": "Design Loads methodology - Ground",
+  "description": "",
+  "start": "2027-11-19",
+  "end": "2028-05-22",
+  "discipline": "ground-loads",
+  "row": 3,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

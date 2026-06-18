@@ -1,12 +1,14 @@
 {
   "id": "new-deliverable-1781732408868",
   "type": "deliverable",
-  "name": "Planform Freeze for PDR",
+  "name": "Planform Freeze",
   "description": "",
   "date": "2027-11-18",
   "discipline": "overall-aircraft-design",
   "row": 9,
-  "predecessors": [],
+  "predecessors": [
+    "new-task-1781808574675"
+  ],
   "status": "planned",
   "tags": []
 }
