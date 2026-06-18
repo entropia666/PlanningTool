@@ -1,0 +1,14 @@
+{
+  "id": "new-deliverable-1781813906055",
+  "type": "deliverable",
+  "name": "Primary control surfaces freeze",
+  "description": "",
+  "date": "2028-03-23",
+  "discipline": "overall-aircraft-design",
+  "row": 10,
+  "predecessors": [
+    "primary-control-surfaces-shape-design"
+  ],
+  "status": "planned",
+  "tags": []
+}

@@ -1,9 +1,9 @@
 {
   "id": "planform-freeze",
   "type": "deliverable",
-  "name": "Planform freeze",
+  "name": "Wind tunnel shape freeze",
   "description": "Concept review deliverable — frozen wing and empennage planform geometry.",
-  "date": "2027-07-24",
+  "date": "2027-05-16",
   "predecessors": [
     "evaluate-f100-handling-qualities-concept",
     "evaluate-f100-performance"
@@ -16,7 +16,7 @@
     "planform",
     "configuration"
   ],
-  "row": 9,
+  "row": 10,
   "discipline": "overall-aircraft-design",
   "subrow": 1
 }

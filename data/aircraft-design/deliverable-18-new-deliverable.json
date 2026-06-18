@@ -7,7 +7,11 @@
   "discipline": "external-inputs-outputs",
   "color": "#9333ea",
   "row": 11,
-  "predecessors": [],
+  "predecessors": [
+    "preliminary-flight-loads-primary-structure",
+    "preliminary-ground-loads",
+    "preliminary-water-loads"
+  ],
   "status": "planned",
   "tags": []
 }

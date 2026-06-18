@@ -3,8 +3,8 @@
   "type": "task",
   "name": "Evaluate performance",
   "description": "",
-  "start": "2028-05-22",
-  "end": "2028-07-16",
+  "start": "2028-05-25",
+  "end": "2028-07-19",
   "predecessors": [
     "wind-tunnel-validated-aero-data",
     "aero-data-for-hq-perfo-loads",

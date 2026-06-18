@@ -2,7 +2,7 @@
   "id": "concept-review",
   "type": "milestone",
   "name": "Concept Review",
-  "description": "Overall aircraft design — concept review gate.",
+  "description": "Overall aircraft design — concept review gate. I consider a priority the validation of our understanding of the F100 performance, handling qualities and mass by running the same exercise on the CL 415 and using information from flight manual, geometry (maybe 3d scan?), simulator sessions maybe?",
   "date": "2027-05-16",
   "predecessors": [
     "validate-cl415-handling-qualities",

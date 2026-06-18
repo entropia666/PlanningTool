@@ -1,0 +1,15 @@
+{
+  "id": "new-deliverable-1781814662390",
+  "type": "deliverable",
+  "name": "System failure modes description",
+  "description": "",
+  "date": "2028-05-13",
+  "discipline": "external-inputs-outputs",
+  "row": 11,
+  "color": "#9333ea",
+  "predecessors": [
+    "new-task-1781814531672"
+  ],
+  "status": "planned",
+  "tags": []
+}

@@ -1,0 +1,13 @@
+{
+  "id": "new-task-1781813553415",
+  "type": "task",
+  "name": "Flight control laws development",
+  "description": "",
+  "start": "2027-08-02",
+  "end": "2027-11-01",
+  "discipline": "flight-control-laws",
+  "row": 8,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

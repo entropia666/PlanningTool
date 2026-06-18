@@ -1,0 +1,13 @@
+{
+  "id": "new-task-1781813827086",
+  "type": "task",
+  "name": "Continuous aero design improvements/fixes",
+  "description": "",
+  "start": "2027-08-22",
+  "end": "2028-01-03",
+  "discipline": "aerodynamic-design",
+  "row": 0,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

@@ -2,7 +2,7 @@
   "id": "preliminary-design-review",
   "type": "milestone",
   "name": "Preliminary Design Review",
-  "description": "Overall aircraft design — preliminary design review gate. Scheduled 15 months after Concept Review.",
+  "description": "Overall aircraft design — preliminary design review gate. Scheduled 15 months after Concept Review. I consider OAD role is answering to the question: is the performance, handling etc of the aircraft satisfactory (and with an associate risk mitigation strategy) to go forward and engage money in detail design?",
   "date": "2028-07-30",
   "predecessors": [
     "concept-review"

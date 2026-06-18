@@ -2,7 +2,7 @@
   "id": "joint-definition-phase",
   "type": "milestone",
   "name": "Joint Definition Phase",
-  "description": "Overall aircraft design — joint definition phase gate. Scheduled 3 months after Preliminary Design Review.",
+  "description": "Overall aircraft design — joint definition phase gate. Scheduled 3 months after Preliminary Design Review. I consider this the point when we need to give to our supplier final, precise data to start detailed design, some of them coming from OAD",
   "date": "2028-10-30",
   "predecessors": [
     "preliminary-design-review"

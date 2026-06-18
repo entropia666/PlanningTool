@@ -1,0 +1,13 @@
+{
+  "id": "new-task-1781814112450",
+  "type": "task",
+  "name": "Evaluate flutter",
+  "description": "",
+  "start": "2028-04-16",
+  "end": "2028-06-06",
+  "discipline": "aeroelastics",
+  "row": 5,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

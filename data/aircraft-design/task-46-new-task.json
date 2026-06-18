@@ -1,0 +1,13 @@
+{
+  "id": "new-task-1781814531672",
+  "type": "task",
+  "name": "Flight control laws in degraded mode",
+  "description": "",
+  "start": "2027-12-19",
+  "end": "2028-03-19",
+  "discipline": "flight-control-laws",
+  "row": 8,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

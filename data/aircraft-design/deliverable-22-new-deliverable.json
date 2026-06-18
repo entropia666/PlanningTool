@@ -1,0 +1,16 @@
+{
+  "id": "new-deliverable-1781813775069",
+  "type": "deliverable",
+  "name": "Primary structure external loft freeze",
+  "description": "",
+  "date": "2028-06-11",
+  "discipline": "overall-aircraft-design",
+  "row": 10,
+  "predecessors": [
+    "new-task-1781813827086",
+    "new-deliverable-1781812830388",
+    "new-task-1781814112450"
+  ],
+  "status": "planned",
+  "tags": []
+}

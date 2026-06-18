@@ -1,0 +1,12 @@
+{
+  "id": "new-deliverable-1781814269182",
+  "type": "deliverable",
+  "name": "Freeze External 3D shape, including fairings, movables kinematics, water hull, floaters",
+  "description": "",
+  "date": "2028-10-30",
+  "discipline": "overall-aircraft-design",
+  "row": 10,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

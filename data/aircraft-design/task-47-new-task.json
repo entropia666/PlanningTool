@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781815097949",
+  "type": "task",
+  "name": "Loop 1 Performance",
+  "description": "",
+  "start": "2027-07-28",
+  "end": "2027-10-04",
+  "discipline": "performance",
+  "row": 6,
+  "predecessors": [
+    "aero-data-for-hq-perform-improved"
+  ],
+  "status": "planned",
+  "tags": []
+}

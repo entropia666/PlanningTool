@@ -6,7 +6,8 @@
   "start": "2028-06-12",
   "end": "2028-10-13",
   "predecessors": [
-    "new-deliverable-1781812830388"
+    "new-deliverable-1781812830388",
+    "new-deliverable-1781814662390"
   ],
   "status": "planned",
   "assignee": "Flight Physics",
