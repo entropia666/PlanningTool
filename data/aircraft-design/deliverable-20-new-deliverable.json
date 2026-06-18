@@ -1,0 +1,17 @@
+{
+  "id": "new-deliverable-1781812830388",
+  "type": "deliverable",
+  "name": "sized GFEM",
+  "description": "",
+  "date": "2028-04-06",
+  "discipline": "external-inputs-outputs",
+  "row": 11,
+  "color": "#9333ea",
+  "predecessors": [
+    "new-task-1781813185085",
+    "new-task-1781813115113",
+    "new-task-1781813076350"
+  ],
+  "status": "planned",
+  "tags": []
+}

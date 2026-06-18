@@ -1,0 +1,14 @@
+[
+  { "id": "aerodynamic-design", "label": "Aerodynamic design" },
+  { "id": "aerodynamic-data", "label": "Aerodynamic data" },
+  { "id": "flight-loads", "label": "Flight Loads" },
+  { "id": "ground-loads", "label": "Ground Loads" },
+  { "id": "water-loads", "label": "Water Loads" },
+  { "id": "aeroelastics", "label": "Aeroelastics" },
+  { "id": "performance", "label": "Performance" },
+  { "id": "handling-qualities", "label": "Handling qualities" },
+  { "id": "flight-control-laws", "label": "Flight control laws" },
+  { "id": "mass-and-cog", "label": "Mass and CoG" },
+  { "id": "overall-aircraft-design", "label": "Overall Aircraft Design" },
+  { "id": "external-inputs-outputs", "label": "External Inputs & Outputs" }
+]

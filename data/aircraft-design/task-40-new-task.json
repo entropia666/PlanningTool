@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781813076350",
+  "type": "task",
+  "name": "Loop 1 Flight Loads",
+  "description": "",
+  "start": "2027-12-01",
+  "end": "2028-02-10",
+  "discipline": "flight-loads",
+  "row": 2,
+  "predecessors": [
+    "design-loads-methodology-flight"
+  ],
+  "status": "planned",
+  "tags": []
+}

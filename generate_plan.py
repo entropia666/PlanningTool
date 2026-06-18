@@ -8,14 +8,14 @@ import json
 import sys
 from pathlib import Path
 
-from plan_logic import assign_rows, load_items
+from plan_logic import assign_rows, load_items, render_gantt_template
 
 
 def build_html(items: list[dict], title: str, template_path: Path) -> str:
     assign_rows(items)
     payload = json.dumps(items, indent=2, ensure_ascii=False)
     template = template_path.read_text(encoding="utf-8")
-    return template.replace("{{TITLE}}", title).replace("{{ITEMS_JSON}}", payload)
+    return render_gantt_template(template, TITLE=title, ITEMS_JSON=payload)
 
 
 def main(argv: list[str] | None = None) -> int:

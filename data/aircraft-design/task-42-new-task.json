@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781813185085",
+  "type": "task",
+  "name": "Loop 1 water loads",
+  "description": "",
+  "start": "2027-11-30",
+  "end": "2028-02-11",
+  "discipline": "water-loads",
+  "row": 4,
+  "predecessors": [
+    "design-loads-methodology-water"
+  ],
+  "status": "planned",
+  "tags": []
+}

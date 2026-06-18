@@ -6,8 +6,8 @@
   "start": "2028-05-24",
   "end": "2028-07-16",
   "predecessors": [
-    "control-surfaces-final-sizing",
-    "aero-data-for-hq-perfo-loads"
+    "aero-data-for-hq-perfo-loads",
+    "propulsive-performance"
   ],
   "status": "planned",
   "tags": [],

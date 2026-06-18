@@ -1,0 +1,13 @@
+{
+  "id": "new-deliverable-1781812407991",
+  "type": "deliverable",
+  "name": "Mass estimate for all items",
+  "description": "",
+  "date": "2027-04-17",
+  "discipline": "external-inputs-outputs",
+  "color": "#9333ea",
+  "row": 11,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

@@ -4,7 +4,7 @@
   "name": "Wind tunnel model manufacturing, test and data analysis",
   "description": "Manufacture wind tunnel model, execute test campaign, and analyse aerodynamic data ahead of PDR.",
   "start": "2027-05-17",
-  "end": "2028-05-16",
+  "end": "2028-04-19",
   "predecessors": [
     "concept-review"
   ],

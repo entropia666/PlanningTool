@@ -1,9 +1,9 @@
 {
   "id": "preliminary-ground-loads",
   "type": "task",
-  "name": "Preliminary ground loads",
+  "name": "Preliminary ground loads (hand calculation)",
   "description": "",
-  "start": "2026-12-23",
+  "start": "2027-01-19",
   "end": "2027-02-27",
   "predecessors": [
     "mass-and-cog-estimate"

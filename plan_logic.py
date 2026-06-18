@@ -14,31 +14,63 @@ ROWABLE_TYPES = frozenset({"task", "milestone", "deliverable"})
 ROW_ASSIGN_TYPES = frozenset({"task", "deliverable"})
 INTERNAL_FIELDS = frozenset({"_source_file", "_auto_row", "_mtime"})
 
-DISCIPLINES: list[str] = [
-    "aerodynamic-design",
-    "aerodynamic-data",
-    "flight-loads",
-    "ground-loads",
-    "water-loads",
-    "aeroelastics",
-    "performance",
-    "handling-qualities",
-    "mass-and-cog",
-    "overall-aircraft-design",
-]
+_ROOT = Path(__file__).resolve().parent
+DISCIPLINES_PATH = _ROOT / "schema" / "disciplines.json"
+PLANNING_SCHEMA_PATH = _ROOT / "schema" / "planning-item.schema.json"
 
+
+def load_discipline_defs(path: Path | None = None) -> list[dict[str, str]]:
+    """Load ordered discipline definitions from schema/disciplines.json."""
+    source = path or DISCIPLINES_PATH
+    data = json.loads(source.read_text(encoding="utf-8"))
+    if not isinstance(data, list) or not data:
+        raise ValueError(f"{source} must be a non-empty JSON array")
+
+    defs: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for entry in data:
+        if not isinstance(entry, dict):
+            raise ValueError(f"Each discipline entry must be an object in {source}")
+        discipline_id = entry.get("id")
+        label = entry.get("label")
+        if not isinstance(discipline_id, str) or not discipline_id:
+            raise ValueError(f"Discipline entry missing string 'id' in {source}")
+        if not isinstance(label, str) or not label:
+            raise ValueError(f"Discipline '{discipline_id}' missing string 'label' in {source}")
+        if discipline_id in seen:
+            raise ValueError(f"Duplicate discipline id '{discipline_id}' in {source}")
+        seen.add(discipline_id)
+        defs.append({"id": discipline_id, "label": label})
+    return defs
+
+
+DISCIPLINE_DEFS = load_discipline_defs()
+DISCIPLINES: list[str] = [entry["id"] for entry in DISCIPLINE_DEFS]
 DISCIPLINE_LABELS: dict[str, str] = {
-    "aerodynamic-design": "Aerodynamic design",
-    "aerodynamic-data": "Aerodynamic data",
-    "flight-loads": "Flight Loads",
-    "ground-loads": "Ground Loads",
-    "water-loads": "Water Loads",
-    "aeroelastics": "Aeroelastics",
-    "performance": "Performance",
-    "handling-qualities": "Handling qualities",
-    "mass-and-cog": "Mass and CoG",
-    "overall-aircraft-design": "Overall Aircraft Design",
+    entry["id"]: entry["label"] for entry in DISCIPLINE_DEFS
 }
+
+
+def disciplines_json() -> str:
+    """JSON array of discipline definitions for injection into HTML templates."""
+    return json.dumps(DISCIPLINE_DEFS, ensure_ascii=False)
+
+
+def render_gantt_template(template: str, **replacements: str) -> str:
+    """Replace template placeholders, including disciplines from the shared config."""
+    html = template.replace("{{DISCIPLINES_JSON}}", disciplines_json())
+    for key, value in replacements.items():
+        html = html.replace(f"{{{{{key}}}}}", value)
+    return html
+
+
+def load_planning_schema(path: Path | None = None) -> dict[str, Any]:
+    """Load planning-item schema with discipline enum synced from disciplines.json."""
+    schema = json.loads((path or PLANNING_SCHEMA_PATH).read_text(encoding="utf-8"))
+    discipline = schema.get("properties", {}).get("discipline")
+    if isinstance(discipline, dict):
+        discipline["enum"] = list(DISCIPLINES)
+    return schema
 
 ITEM_DISCIPLINE_BY_ID: dict[str, str] = {
     "flaps-loft-kinematics": "aerodynamic-design",

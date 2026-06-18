@@ -2,8 +2,8 @@
   "id": "propulsive-performance",
   "type": "deliverable",
   "name": "Propulsive performance",
-  "description": "Preliminary design review deliverable — propulsive performance data, due three months before PDR. Provided by an external team.",
-  "date": "2028-04-30",
+  "description": "Preliminary design review deliverable — propulsive performance data, due three months before PDR. Provided by an external team. This should include propeller selection and its associated thrust and 1P loads",
+  "date": "2028-05-13",
   "predecessors": [],
   "status": "planned",
   "color": "#9333ea",
@@ -16,6 +16,6 @@
     "external"
   ],
   "source": "external",
-  "discipline": "performance",
-  "row": 6
+  "discipline": "external-inputs-outputs",
+  "row": 11
 }

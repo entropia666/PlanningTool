@@ -68,19 +68,7 @@
     },
     "discipline": {
       "type": "string",
-      "enum": [
-        "aerodynamic-design",
-        "aerodynamic-data",
-        "flight-loads",
-        "ground-loads",
-        "water-loads",
-        "aeroelastics",
-        "performance",
-        "handling-qualities",
-        "mass-and-cog",
-        "overall-aircraft-design"
-      ],
-      "description": "Engineering discipline category; determines the Gantt row."
+      "description": "Engineering discipline category; determines the Gantt row. Allowed values are defined in schema/disciplines.json."
     },
     "subrow": {
       "type": "integer",

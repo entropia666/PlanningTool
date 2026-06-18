@@ -6,9 +6,7 @@
   "start": "2028-06-12",
   "end": "2028-10-13",
   "predecessors": [
-    "design-loads-methodology-flight",
-    "design-loads-methodology-water",
-    "design-loads-methodology-ground"
+    "new-deliverable-1781812830388"
   ],
   "status": "planned",
   "assignee": "Flight Physics",

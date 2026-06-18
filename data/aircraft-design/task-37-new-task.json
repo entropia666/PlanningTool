@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781812642881",
+  "type": "task",
+  "name": "Flight control law concept selection",
+  "description": "",
+  "start": "2027-03-23",
+  "end": "2027-05-05",
+  "discipline": "flight-control-laws",
+  "row": 8,
+  "predecessors": [
+    "new-task-1781812684175"
+  ],
+  "status": "planned",
+  "tags": []
+}

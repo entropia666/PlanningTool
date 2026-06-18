@@ -452,30 +452,11 @@
     const TOOLTIP_SKIP_KEYS = new Set([
       "id", "type", "tags", "row", "discipline", "subrow", "group", "row_label", "anchor", "name", "assignee",
     ]);
-    const DISCIPLINES = [
-      "aerodynamic-design",
-      "aerodynamic-data",
-      "flight-loads",
-      "ground-loads",
-      "water-loads",
-      "aeroelastics",
-      "performance",
-      "handling-qualities",
-      "mass-and-cog",
-      "overall-aircraft-design",
-    ];
-    const DISCIPLINE_LABELS = {
-      "aerodynamic-design": "Aerodynamic design",
-      "aerodynamic-data": "Aerodynamic data",
-      "flight-loads": "Flight Loads",
-      "ground-loads": "Ground Loads",
-      "water-loads": "Water Loads",
-      "aeroelastics": "Aeroelastics",
-      "performance": "Performance",
-      "handling-qualities": "Handling qualities",
-      "mass-and-cog": "Mass and CoG",
-      "overall-aircraft-design": "Overall Aircraft Design",
-    };
+    const DISCIPLINE_DEFS = {{DISCIPLINES_JSON}};
+    const DISCIPLINES = DISCIPLINE_DEFS.map((d) => d.id);
+    const DISCIPLINE_LABELS = Object.fromEntries(
+      DISCIPLINE_DEFS.map((d) => [d.id, d.label]),
+    );
 
     let dayWidth = BASE_DAY_WIDTH;
     let viewBounds = null;

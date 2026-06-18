@@ -7,7 +7,9 @@
   "end": "2028-07-16",
   "predecessors": [
     "wind-tunnel-validated-aero-data",
-    "aero-data-for-hq-perfo-loads"
+    "aero-data-for-hq-perfo-loads",
+    "propulsive-performance",
+    "new-deliverable-1781812579749"
   ],
   "status": "planned",
   "tags": [],

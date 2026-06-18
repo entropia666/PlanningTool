@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781811817726",
+  "type": "task",
+  "name": "Mass and CoG refinement",
+  "description": "",
+  "start": "2027-04-23",
+  "end": "2027-05-16",
+  "discipline": "mass-and-cog",
+  "row": 9,
+  "predecessors": [
+    "new-deliverable-1781812407991"
+  ],
+  "status": "planned",
+  "tags": []
+}

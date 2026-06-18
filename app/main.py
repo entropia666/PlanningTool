@@ -21,12 +21,14 @@ from plan_logic import (
     find_item_file,
     format_date,
     load_items,
+    load_planning_schema,
     make_filename,
     new_deliverable_template,
     new_task_template,
     parse_date,
     plan_data_dir,
     read_item_file,
+    render_gantt_template,
     snap_deliverable_to_milestone,
     strip_internal_fields,
     validate_predecessors,
@@ -40,7 +42,7 @@ TEMPLATE_PATH = ROOT / "templates" / "gantt-editor.html"
 
 def create_app(default_plan: str = "aircraft-design") -> FastAPI:
     app = FastAPI(title="Aircraft Planning Editor")
-    schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    schema = load_planning_schema(SCHEMA_PATH)
     validator = jsonschema.Draft202012Validator(schema)
 
     def data_dir(plan: str) -> Path:
@@ -78,9 +80,10 @@ def create_app(default_plan: str = "aircraft-design") -> FastAPI:
     @app.get("/", response_class=HTMLResponse)
     async def index() -> HTMLResponse:
         template = TEMPLATE_PATH.read_text(encoding="utf-8")
-        html = (
-            template.replace("{{TITLE}}", "Aircraft Design")
-            .replace("{{DEFAULT_PLAN}}", default_plan)
+        html = render_gantt_template(
+            template,
+            TITLE="Aircraft Design",
+            DEFAULT_PLAN=default_plan,
         )
         return HTMLResponse(
             html,

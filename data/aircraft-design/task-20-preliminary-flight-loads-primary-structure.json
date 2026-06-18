@@ -1,7 +1,7 @@
 {
   "id": "preliminary-flight-loads-primary-structure",
   "type": "task",
-  "name": "Preliminary flight loads for primary structure",
+  "name": "Early flight loads for primary structure (hand calculation)",
   "description": "",
   "start": "2026-12-23",
   "end": "2027-02-27",

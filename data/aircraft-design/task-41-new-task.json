@@ -1,0 +1,15 @@
+{
+  "id": "new-task-1781813115113",
+  "type": "task",
+  "name": "Loop 1 ground loads",
+  "description": "",
+  "start": "2027-12-01",
+  "end": "2028-02-11",
+  "discipline": "ground-loads",
+  "row": 3,
+  "predecessors": [
+    "design-loads-methodology-ground"
+  ],
+  "status": "planned",
+  "tags": []
+}

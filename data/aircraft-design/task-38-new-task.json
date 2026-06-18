@@ -1,0 +1,13 @@
+{
+  "id": "new-task-1781812684175",
+  "type": "task",
+  "name": "Manoeuvrability TLARs",
+  "description": "",
+  "start": "2026-11-04",
+  "end": "2027-01-23",
+  "discipline": "overall-aircraft-design",
+  "row": 8,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}

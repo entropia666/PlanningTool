@@ -1,0 +1,15 @@
+{
+  "id": "new-deliverable-1781813384863",
+  "type": "deliverable",
+  "name": "Flight control system requirements",
+  "description": "",
+  "date": "2027-05-17",
+  "discipline": "external-inputs-outputs",
+  "color": "#9333ea",
+  "row": 11,
+  "predecessors": [
+    "flight-control-law-architecture-drivers"
+  ],
+  "status": "planned",
+  "tags": []
+}

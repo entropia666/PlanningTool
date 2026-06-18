@@ -3,10 +3,10 @@
   "type": "task",
   "name": "Flight Design Loads (manoeuvre and gust)",
   "description": "Development of manoeuvre and gust load cases for primary structure and overall aircraft loads envelope.",
-  "start": "2028-06-14",
-  "end": "2028-10-15",
+  "start": "2028-06-12",
+  "end": "2028-10-13",
   "predecessors": [
-    "design-loads-methodology-flight"
+    "new-deliverable-1781812830388"
   ],
   "status": "planned",
   "assignee": "Flight Physics",

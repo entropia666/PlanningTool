@@ -1,0 +1,13 @@
+{
+  "id": "new-task-1781812777116",
+  "type": "task",
+  "name": "Flutter stability methodology",
+  "description": "",
+  "start": "2027-12-18",
+  "end": "2028-05-14",
+  "discipline": "aeroelastics",
+  "row": 5,
+  "predecessors": [],
+  "status": "planned",
+  "tags": []
+}
