@@ -6,7 +6,7 @@
   "start": "2028-06-12",
   "end": "2028-10-13",
   "predecessors": [
-    "new-task-1781728461373"
+    "design-loads-methodology-flight"
   ],
   "status": "planned",
   "assignee": "Flight Physics",

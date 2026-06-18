@@ -1,12 +1,12 @@
 {
-  "id": "new-task-1781728826435",
+  "id": "preliminary-flight-loads-primary-structure",
   "type": "task",
   "name": "Preliminary flight loads for primary structure",
   "description": "",
   "start": "2026-12-23",
   "end": "2027-02-27",
   "predecessors": [
-    "new-task-1781730602764"
+    "mass-and-cog-estimate"
   ],
   "status": "planned",
   "tags": [],

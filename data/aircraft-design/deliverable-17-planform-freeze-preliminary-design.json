@@ -1,5 +1,5 @@
 {
-  "id": "new-deliverable-1781732408868",
+  "id": "planform-freeze-preliminary-design",
   "type": "deliverable",
   "name": "Planform Freeze",
   "description": "",
@@ -7,7 +7,7 @@
   "discipline": "overall-aircraft-design",
   "row": 9,
   "predecessors": [
-    "new-task-1781808574675"
+    "tails-final-sizing"
   ],
   "status": "planned",
   "tags": []

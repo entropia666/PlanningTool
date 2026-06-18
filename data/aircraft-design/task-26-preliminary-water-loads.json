@@ -1,12 +1,12 @@
 {
-  "id": "new-task-1781730549221",
+  "id": "preliminary-water-loads",
   "type": "task",
   "name": "Preliminary water loads",
   "description": "",
   "start": "2026-12-24",
   "end": "2027-02-28",
   "predecessors": [
-    "new-task-1781730602764"
+    "mass-and-cog-estimate"
   ],
   "status": "planned",
   "tags": [],

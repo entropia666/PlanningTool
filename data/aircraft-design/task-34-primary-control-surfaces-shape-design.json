@@ -1,5 +1,5 @@
 {
-  "id": "new-task-1781811298993",
+  "id": "primary-control-surfaces-shape-design",
   "type": "task",
   "name": "Primary Control surfaces shape design",
   "description": "",
@@ -8,7 +8,7 @@
   "discipline": "aerodynamic-design",
   "row": 0,
   "predecessors": [
-    "new-task-1781727639299"
+    "control-surfaces-final-sizing"
   ],
   "status": "planned",
   "tags": []

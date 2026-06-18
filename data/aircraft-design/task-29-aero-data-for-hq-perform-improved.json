@@ -1,5 +1,5 @@
 {
-  "id": "new-task-1781732633772",
+  "id": "aero-data-for-hq-perform-improved",
   "type": "task",
   "name": "Aero data for HQ, Perfo",
   "description": "",
@@ -8,7 +8,7 @@
   "discipline": "aerodynamic-data",
   "row": 1,
   "predecessors": [
-    "new-task-1781732510582"
+    "f100-aero-shape-improvements"
   ],
   "status": "planned",
   "tags": []

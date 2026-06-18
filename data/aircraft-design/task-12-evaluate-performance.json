@@ -1,5 +1,5 @@
 {
-  "id": "new-task-1781727214306",
+  "id": "evaluate-performance",
   "type": "task",
   "name": "Evaluate performance",
   "description": "",
@@ -7,7 +7,7 @@
   "end": "2028-07-16",
   "predecessors": [
     "wind-tunnel-validated-aero-data",
-    "new-task-1781811366564"
+    "aero-data-for-hq-perfo-loads"
   ],
   "status": "planned",
   "tags": [],

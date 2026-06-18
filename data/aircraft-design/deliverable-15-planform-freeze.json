@@ -5,8 +5,8 @@
   "description": "Concept review deliverable — frozen wing and empennage planform geometry.",
   "date": "2027-07-11",
   "predecessors": [
-    "new-task-1781728931019",
-    "new-task-1781729363543"
+    "evaluate-f100-handling-qualities-concept",
+    "evaluate-f100-performance"
   ],
   "status": "planned",
   "tags": [

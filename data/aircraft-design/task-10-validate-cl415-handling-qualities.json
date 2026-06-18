@@ -7,9 +7,9 @@
   "end": "2027-05-14",
   "predecessors": [
     "CL 415 Aero data creation",
-    "new-task-1781728093797",
-    "new-task-1781727966427",
-    "new-task-1781727940372"
+    "water-handling-qualities-methodology",
+    "ground-handling-qualities-methodology",
+    "in-flight-handling-qualities-methodology"
   ],
   "status": "planned",
   "assignee": "Flight Physics",

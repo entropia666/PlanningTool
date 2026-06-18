@@ -1,5 +1,5 @@
 {
-  "id": "new-task-1781808801521",
+  "id": "evaluate-f100-handling-qualities-pre-freeze",
   "type": "task",
   "name": "Evaluate F100 handling qualities",
   "description": "",
@@ -8,7 +8,7 @@
   "discipline": "handling-qualities",
   "row": 7,
   "predecessors": [
-    "new-task-1781732633772"
+    "aero-data-for-hq-perform-improved"
   ],
   "status": "planned",
   "tags": []

@@ -6,9 +6,9 @@
   "start": "2028-06-12",
   "end": "2028-10-13",
   "predecessors": [
-    "new-task-1781728461373",
-    "new-task-1781811069585",
-    "new-task-1781811037382"
+    "design-loads-methodology-flight",
+    "design-loads-methodology-water",
+    "design-loads-methodology-ground"
   ],
   "status": "planned",
   "assignee": "Flight Physics",

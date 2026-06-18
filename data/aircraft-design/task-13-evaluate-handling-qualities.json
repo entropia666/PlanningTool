@@ -1,13 +1,13 @@
 {
-  "id": "new-task-1781727460159",
+  "id": "evaluate-handling-qualities",
   "type": "task",
   "name": "Evaluate Handling qualities",
   "description": "",
   "start": "2028-05-24",
   "end": "2028-07-16",
   "predecessors": [
-    "new-task-1781727639299",
-    "new-task-1781811366564"
+    "control-surfaces-final-sizing",
+    "aero-data-for-hq-perfo-loads"
   ],
   "status": "planned",
   "tags": [],

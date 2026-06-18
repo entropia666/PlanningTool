@@ -1,5 +1,5 @@
 {
-  "id": "new-task-1781811366564",
+  "id": "aero-data-for-hq-perfo-loads",
   "type": "task",
   "name": "Aero data for HQ, Perfo, Loads",
   "description": "",
@@ -8,7 +8,7 @@
   "discipline": "aerodynamic-data",
   "row": 1,
   "predecessors": [
-    "new-task-1781811298993"
+    "primary-control-surfaces-shape-design"
   ],
   "status": "planned",
   "tags": [],

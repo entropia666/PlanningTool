@@ -1,5 +1,5 @@
 {
-  "id": "new-task-1781808574675",
+  "id": "tails-final-sizing",
   "type": "task",
   "name": "Tails final sizing",
   "description": "",
@@ -8,7 +8,7 @@
   "discipline": "handling-qualities",
   "row": 7,
   "predecessors": [
-    "new-task-1781808801521"
+    "evaluate-f100-handling-qualities-pre-freeze"
   ],
   "status": "planned",
   "tags": []
