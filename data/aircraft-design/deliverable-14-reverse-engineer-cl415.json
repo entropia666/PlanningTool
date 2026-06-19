@@ -8,7 +8,6 @@
     "gather-cl415-engineering-info",
     "validate-cl415-handling-qualities"
   ],
-  "anchor": "gather-cl415-engineering-info",
   "status": "planned",
   "tags": [
     "aircraft-design",
@@ -17,7 +16,7 @@
     "reverse-engineering",
     "CL-415"
   ],
-  "row": 1,
+  "row": 10,
   "discipline": "overall-aircraft-design",
-  "subrow": 18
+  "subrow": 2
 }

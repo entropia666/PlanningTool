@@ -642,7 +642,7 @@
     const API = `/api/plans/${PLAN}`;
     const INTERNAL_KEYS = new Set(["_source_file", "_auto_row", "_mtime"]);
     const TOOLTIP_SKIP_KEYS = new Set([
-      "id", "type", "tags", "row", "discipline", "subrow", "group", "row_label", "anchor", "name", "assignee",
+      "id", "type", "tags", "row", "discipline", "subrow", "group", "row_label", "name", "assignee",
     ]);
     const DISCIPLINE_DEFS = {{DISCIPLINES_JSON}};
     const DISCIPLINES = DISCIPLINE_DEFS.map((d) => d.id);
@@ -1212,16 +1212,8 @@
       }
 
       for (const item of sorted) {
-        if (item.anchor) continue;
         const lane = laneForItem(item);
         if (lane !== null) placeInLane(item, lane);
-      }
-
-      for (const item of sorted) {
-        const anchorId = item.anchor;
-        if (anchorId && subrows.has(anchorId)) {
-          placeInLane(item, subrows.get(anchorId));
-        }
       }
 
       for (const item of sorted) {
@@ -1234,12 +1226,6 @@
         );
         if (lane === -1) lane = lanes.length;
         placeInLane(item, lane);
-      }
-
-      for (const item of sorted) {
-        if (subrows.has(item.id)) continue;
-        const anchorId = item.anchor;
-        if (anchorId && subrows.has(anchorId)) placeInLane(item, subrows.get(anchorId));
       }
 
       return { subrows, laneCount: Math.max(lanes.length, 1) };

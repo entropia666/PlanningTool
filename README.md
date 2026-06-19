@@ -55,7 +55,7 @@ Additional fields (`description`, `assignee`, `status`, `priority`, `tags`, `not
 
 **Milestones** render on the **timeline header** (diamond + label) with a **vertical line** spanning the full chart height. Tasks and deliverables occupy rows below.
 
-To share a row, use the same `"row"`, `"group"`, or `"anchor"` on tasks/deliverables.
+To share a row, use the same `"row"` or `"group"` on tasks/deliverables.
 
 If items on the same row overlap in time, the row expands into **subrows** (stacked lanes with light divider lines).
 

@@ -82,10 +82,6 @@
     "row_label": {
       "type": "string",
       "description": "Optional label for the left column when multiple items share a row."
-    },
-    "anchor": {
-      "type": "string",
-      "description": "Optional item id; render on that item's row instead of a dedicated row."
     }
   },
   "allOf": [

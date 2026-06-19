@@ -241,20 +241,11 @@ def infer_discipline(item: dict[str, Any]) -> str:
 
 def assign_rows(items: list[dict[str, Any]]) -> None:
     """Map each task/deliverable to a fixed discipline row."""
-    by_id = {item["id"]: item for item in items if "id" in item}
-
     for item in items:
         if item.get("type") not in ROW_ASSIGN_TYPES:
             continue
 
-        anchor_id = item.get("anchor")
-        if anchor_id and anchor_id in by_id:
-            anchor = by_id[anchor_id]
-            discipline = anchor.get("discipline")
-            if discipline not in DISCIPLINES:
-                discipline = infer_discipline(anchor)
-            item["discipline"] = discipline
-        elif item.get("discipline") not in DISCIPLINES:
+        if item.get("discipline") not in DISCIPLINES:
             item["discipline"] = infer_discipline(item)
 
         item["row"] = discipline_index(item["discipline"])
